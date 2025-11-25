@@ -1,0 +1,2183 @@
+basePath: /
+definitions:
+  handlers.LoginRequest:
+    properties:
+      email:
+        description: |-
+          in: body
+          required: true
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.Area:
+    properties:
+      area_coverage:
+        type: number
+      area_name:
+        type: string
+      branch:
+        $ref: '#/definitions/models.Branch'
+      branch_id:
+        type: integer
+      created_by:
+        type: string
+      created_on:
+        type: string
+      district_coverage:
+        type: number
+      district_id:
+        type: string
+      id:
+        description: swagger:model Area
+        type: integer
+      updated_by:
+        type: string
+      updated_on:
+        type: string
+    type: object
+  models.Branch:
+    properties:
+      aashram_area:
+        type: number
+      address:
+        type: string
+      city:
+        type: string
+      contact_number:
+        type: string
+      coordinator_name:
+        type: string
+      country:
+        type: string
+      created_by:
+        type: string
+      created_on:
+        type: string
+      daily_end_time:
+        type: string
+      daily_start_time:
+        type: string
+      district:
+        type: string
+      email:
+        type: string
+      established_on:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      open_days:
+        description: e.g. "Mon-Fri"
+        type: string
+      pincode:
+        type: string
+      police_station:
+        type: string
+      post_office:
+        type: string
+      state:
+        type: string
+      updated_by:
+        type: string
+      updated_on:
+        type: string
+    type: object
+  models.BranchInfrastructure:
+    properties:
+      branch:
+        $ref: '#/definitions/models.Branch'
+      branch_id:
+        type: integer
+      count:
+        type: integer
+      created_by:
+        type: string
+      created_on:
+        type: string
+      id:
+        type: integer
+      type:
+        type: string
+      updated_by:
+        type: string
+      updated_on:
+        type: string
+    type: object
+  models.BranchMember:
+    properties:
+      age:
+        type: integer
+      branch:
+        $ref: '#/definitions/models.Branch'
+      branch_id:
+        type: integer
+      branch_role:
+        type: string
+      created_by:
+        type: string
+      created_on:
+        type: string
+      date_of_birth:
+        type: string
+      date_of_samarpan:
+        type: string
+      id:
+        type: integer
+      member_type:
+        type: string
+      name:
+        type: string
+      qualification:
+        type: string
+      responsibility:
+        type: string
+      updated_by:
+        type: string
+      updated_on:
+        type: string
+    type: object
+  models.Event:
+    properties:
+      event_name:
+        type: string
+      id:
+        type: integer
+    type: object
+  models.EventCategory:
+    properties:
+      event_type:
+        $ref: '#/definitions/models.EventType'
+      event_type_id:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.EventDetails:
+    properties:
+      address:
+        type: string
+      beneficiary_child:
+        type: integer
+      beneficiary_men:
+        type: integer
+      beneficiary_women:
+        type: integer
+      city:
+        type: string
+      country:
+        type: string
+      created_by:
+        type: string
+      created_on:
+        type: string
+      daily_end_time:
+        type: string
+      daily_start_time:
+        type: string
+      district:
+        type: string
+      end_date:
+        type: string
+      event_category:
+        $ref: '#/definitions/models.EventCategory'
+      event_category_id:
+        type: integer
+      event_type:
+        $ref: '#/definitions/models.EventType'
+      event_type_id:
+        type: integer
+      id:
+        type: integer
+      initiation_child:
+        type: integer
+      initiation_men:
+        type: integer
+      initiation_women:
+        type: integer
+      pincode:
+        type: string
+      post_office:
+        type: string
+      scale:
+        type: string
+      spiritual_orator:
+        type: string
+      start_date:
+        type: string
+      state:
+        type: string
+      theme:
+        type: string
+      updated_by:
+        type: string
+      updated_on:
+        type: string
+    type: object
+  models.EventMedia:
+    properties:
+      company_email:
+        type: string
+      company_name:
+        type: string
+      company_website:
+        type: string
+      contact:
+        type: string
+      created_by:
+        description: only set on create
+        type: string
+      created_on:
+        type: string
+      designation:
+        type: string
+      email:
+        type: string
+      event:
+        $ref: '#/definitions/models.Event'
+      event_id:
+        type: integer
+      first_name:
+        type: string
+      gender:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      media_coverage_type:
+        $ref: '#/definitions/models.MediaCoverageType'
+      media_coverage_type_id:
+        type: integer
+      middle_name:
+        type: string
+      prefix:
+        type: string
+      updated_by:
+        type: string
+      updated_on:
+        type: string
+    type: object
+  models.EventType:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.MediaCoverageType:
+    properties:
+      id:
+        type: integer
+      media_type:
+        type: string
+    type: object
+  models.PromotionMaterial:
+    properties:
+      id:
+        type: integer
+      material_type:
+        type: string
+    type: object
+  models.PromotionMaterialDetails:
+    properties:
+      created_by:
+        type: string
+      created_on:
+        type: string
+      dimension_height:
+        type: number
+      dimension_width:
+        type: number
+      event:
+        $ref: '#/definitions/models.Event'
+      event_id:
+        type: integer
+      id:
+        type: integer
+      promotion_material:
+        $ref: '#/definitions/models.PromotionMaterial'
+      promotion_material_id:
+        type: integer
+      quantity:
+        type: integer
+      size:
+        type: string
+      updated_by:
+        type: string
+      updated_on:
+        type: string
+    type: object
+  models.Role:
+    properties:
+      created_on:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_on:
+        type: string
+    type: object
+  models.SpecialGuest:
+    properties:
+      city:
+        type: string
+      contact_person:
+        type: string
+      contact_person_number:
+        type: string
+      created_by:
+        type: string
+      created_on:
+        type: string
+      designation:
+        type: string
+      email:
+        type: string
+      event:
+        $ref: '#/definitions/models.Event'
+      event_id:
+        type: integer
+      first_name:
+        type: string
+      gender:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      middle_name:
+        type: string
+      organization:
+        type: string
+      personal_number:
+        type: string
+      prefix:
+        type: string
+      reference_branch_id:
+        type: string
+      reference_person_name:
+        type: string
+      reference_volunteer_id:
+        type: string
+      state:
+        type: string
+      updated_by:
+        type: string
+      updated_on:
+        type: string
+    type: object
+  models.User:
+    properties:
+      contact_number:
+        type: string
+      created_by:
+        type: string
+      created_on:
+        type: string
+      email:
+        type: string
+      expired_on:
+        type: string
+      first_login_on:
+        type: string
+      id:
+        type: integer
+      is_deleted:
+        type: boolean
+      last_login_on:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      role:
+        $ref: '#/definitions/models.Role'
+      role_id:
+        type: integer
+      token:
+        type: string
+      updated_by:
+        type: string
+      updated_on:
+        type: string
+    type: object
+  models.Volunteer:
+    properties:
+      branch:
+        $ref: '#/definitions/models.Branch'
+      branch_id:
+        type: integer
+      created_by:
+        type: string
+      created_on:
+        type: string
+      event:
+        $ref: '#/definitions/models.Event'
+      event_id:
+        type: integer
+      id:
+        type: integer
+      mention_seva:
+        type: string
+      number_of_days:
+        type: integer
+      search_volunteer:
+        type: string
+      seva_involved:
+        type: string
+      updated_by:
+        type: string
+      updated_on:
+        type: string
+      volunteer_name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: vaish@gmail.com
+    name: API Support
+  description: API documentation for the DJJS Event Reporting Backend.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: DJJS Event Reporting API
+  version: "1.0"
+paths:
+  /api/areas:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Area'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all areas
+      tags:
+      - Areas
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Area payload
+        in: body
+        name: area
+        required: true
+        schema:
+          $ref: '#/definitions/models.Area'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new area
+      tags:
+      - Areas
+  /api/areas/{id}:
+    delete:
+      parameters:
+      - description: Area ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete an area
+      tags:
+      - Areas
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Area ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated fields
+        in: body
+        name: area
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update an area
+      tags:
+      - Areas
+  /api/areas/search:
+    get:
+      description: Retrieve an area by its name, or all areas if no name is provided.
+      parameters:
+      - description: Area Name
+        in: query
+        name: area_name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Area'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get areas by name (or all if none provided)
+      tags:
+      - Areas
+  /api/branch-infra:
+    get:
+      description: Fetch all branch infrastructure entries
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.BranchInfrastructure'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all branch infrastructure records
+      tags:
+      - BranchInfrastructure
+    post:
+      consumes:
+      - application/json
+      description: Adds a new infrastructure entry for a branch
+      parameters:
+      - description: Infrastructure payload
+        in: body
+        name: infra
+        required: true
+        schema:
+          $ref: '#/definitions/models.BranchInfrastructure'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new branch infrastructure record
+      tags:
+      - BranchInfrastructure
+  /api/branch-infra/{id}:
+    delete:
+      description: Delete an infrastructure entry by ID
+      parameters:
+      - description: Infrastructure ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a branch infrastructure record
+      tags:
+      - BranchInfrastructure
+    put:
+      consumes:
+      - application/json
+      description: Update existing infrastructure entry by ID
+      parameters:
+      - description: Infrastructure ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated fields
+        in: body
+        name: infra
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a branch infrastructure record
+      tags:
+      - BranchInfrastructure
+  /api/branch-infra/branch/{branch_id}:
+    get:
+      description: Fetch all infrastructure entries for a specific branch
+      parameters:
+      - description: Branch ID
+        in: path
+        name: branch_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.BranchInfrastructure'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get infrastructure records for a branch
+      tags:
+      - BranchInfrastructure
+  /api/branch-member:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.BranchMember'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all branch members
+      tags:
+      - BranchMember
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Branch Member payload
+        in: body
+        name: member
+        required: true
+        schema:
+          $ref: '#/definitions/models.BranchMember'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new branch member
+      tags:
+      - BranchMember
+  /api/branch-member/{id}:
+    delete:
+      parameters:
+      - description: Member ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a branch member
+      tags:
+      - BranchMember
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Member ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated fields
+        in: body
+        name: member
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a branch member
+      tags:
+      - BranchMember
+  /api/branch-member/branch/{branch_id}:
+    get:
+      parameters:
+      - description: Branch ID
+        in: path
+        name: branch_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.BranchMember'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get members of a branch
+      tags:
+      - BranchMember
+  /api/branches:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Branch'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all branches
+      tags:
+      - Branches
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Branch payload
+        in: body
+        name: branch
+        required: true
+        schema:
+          $ref: '#/definitions/models.Branch'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new branch
+      tags:
+      - Branches
+  /api/branches/{id}:
+    delete:
+      parameters:
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a branch
+      tags:
+      - Branches
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated fields
+        in: body
+        name: branch
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a branch
+      tags:
+      - Branches
+  /api/branches/search:
+    get:
+      description: Retrieve branches by name and/or coordinator name, or list all
+        if no filters.
+      parameters:
+      - description: Branch Name
+        in: query
+        name: name
+        type: string
+      - description: Coordinator Name
+        in: query
+        name: coordinator
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Branch'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get branches by name or coordinator (or all if none provided)
+      tags:
+      - Branches
+  /api/event-media:
+    get:
+      description: Retrieve all EventMedia records
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.EventMedia'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all Event Media
+      tags:
+      - EventMedia
+    post:
+      consumes:
+      - application/json
+      description: Create a new record in EventMedia table
+      parameters:
+      - description: Event Media Details
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/models.EventMedia'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.EventMedia'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create new Event Media
+      tags:
+      - EventMedia
+  /api/event-media/{id}:
+    delete:
+      description: Delete a record by ID from EventMedia
+      parameters:
+      - description: Event Media ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete Event Media
+      tags:
+      - EventMedia
+    put:
+      consumes:
+      - application/json
+      description: Update an EventMedia record by ID
+      parameters:
+      - description: Event Media ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated details
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/models.EventMedia'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.EventMedia'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update Event Media
+      tags:
+      - EventMedia
+  /api/event-media/event/{event_id}:
+    get:
+      description: Get all Event Media records for a specific Event ID
+      parameters:
+      - description: Event ID
+        in: path
+        name: event_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.EventMedia'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Event Media by Event ID
+      tags:
+      - EventMedia
+  /api/events:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.EventDetails'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all events
+      tags:
+      - Events
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Event payload
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/models.EventDetails'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new event
+      tags:
+      - Events
+  /api/events/{event_id}/specialguests:
+    get:
+      parameters:
+      - description: Event ID
+        in: path
+        name: event_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SpecialGuest'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get special guest by event ID
+      tags:
+      - SpecialGuests
+  /api/events/{event_id}/volunteers:
+    get:
+      parameters:
+      - description: Event ID
+        in: path
+        name: event_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Volunteer'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get volunteer by event ID
+      tags:
+      - Volunteers
+  /api/events/{id}:
+    delete:
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete an event
+      tags:
+      - Events
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated fields
+        in: body
+        name: event
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update an event
+      tags:
+      - Events
+  /api/events/search:
+    get:
+      description: Search events by keyword
+      parameters:
+      - description: Search keyword
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.EventDetails'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Search events
+      tags:
+      - Events
+  /api/promotion-material-details:
+    get:
+      description: Retrieve all PromotionMaterialDetails records
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.PromotionMaterialDetails'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all Promotion Material Details
+      tags:
+      - PromotionMaterialDetails
+    post:
+      consumes:
+      - application/json
+      description: Create a new record in PromotionMaterialDetails table
+      parameters:
+      - description: Promotion Material Details
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/models.PromotionMaterialDetails'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.PromotionMaterialDetails'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create new Promotion Material Details
+      tags:
+      - PromotionMaterialDetails
+  /api/promotion-material-details/{id}:
+    delete:
+      description: Delete a record by ID from PromotionMaterialDetails
+      parameters:
+      - description: Promotion Material Details ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete Promotion Material Details
+      tags:
+      - PromotionMaterialDetails
+    put:
+      consumes:
+      - application/json
+      description: Update a PromotionMaterialDetails record by ID
+      parameters:
+      - description: Promotion Material Details ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated details
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/models.PromotionMaterialDetails'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PromotionMaterialDetails'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update Promotion Material Details
+      tags:
+      - PromotionMaterialDetails
+  /api/promotion-material-details/event/{event_id}:
+    get:
+      description: Get all Promotion Material Details records for a specific Event
+        ID
+      parameters:
+      - description: Event ID
+        in: path
+        name: event_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.PromotionMaterialDetails'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Promotion Material Details by Event ID
+      tags:
+      - PromotionMaterialDetails
+  /api/specialguests:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.SpecialGuest'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all special guests
+      tags:
+      - SpecialGuests
+    post:
+      consumes:
+      - application/json
+      description: Store a special guest profile
+      parameters:
+      - description: Special guest payload
+        in: body
+        name: specialGuest
+        required: true
+        schema:
+          $ref: '#/definitions/models.SpecialGuest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a special guest
+      tags:
+      - SpecialGuests
+  /api/specialguests/{id}:
+    delete:
+      parameters:
+      - description: Special guest ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a special guest
+      tags:
+      - SpecialGuests
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Special guest ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Fields to update
+        in: body
+        name: updates
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a special guest
+      tags:
+      - SpecialGuests
+  /api/users:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all users
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      description: Create user with auto-generated password (returned in response)
+      parameters:
+      - description: User payload
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new user
+      tags:
+      - Users
+  /api/users/{id}:
+    delete:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a user (soft delete)
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated fields
+        in: body
+        name: user
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a user
+      tags:
+      - Users
+  /api/users/search:
+    get:
+      description: Retrieve users based on provided filters (email, contact number,
+        or both).
+      parameters:
+      - description: User Email
+        in: query
+        name: email
+        type: string
+      - description: User Contact Number
+        in: query
+        name: contact_number
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Search users by email or contact number
+      tags:
+      - Users
+  /api/volunteers:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Volunteer'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all volunteers
+      tags:
+      - Volunteers
+    post:
+      consumes:
+      - application/json
+      description: Store volunteer details
+      parameters:
+      - description: Volunteer payload
+        in: body
+        name: volunteer
+        required: true
+        schema:
+          $ref: '#/definitions/models.Volunteer'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a volunteer
+      tags:
+      - Volunteers
+  /api/volunteers/{id}:
+    delete:
+      parameters:
+      - description: Volunteer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a volunteer
+      tags:
+      - Volunteers
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Volunteer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Fields to update
+        in: body
+        name: updates
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a volunteer
+      tags:
+      - Volunteers
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user using email and password
+      parameters:
+      - description: Login credentials
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login user and return JWT token
+      tags:
+      - Auth
+  /logout:
+    post:
+      description: Clears user's token and ends session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Logout user
+      tags:
+      - Auth
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
