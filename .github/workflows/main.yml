@@ -1,4 +1,4 @@
-name: Debug & Deploy (Docker → ECR)
+dname: Debug & Deploy (Docker → ECR)
 
 on:
   push:
@@ -10,11 +10,11 @@ permissions:
   contents: read
 
 env:
-  IMAGE_NAME: djjs-back
-  CONTAINER_NAME: djjs-back
+  IMAGE_NAME: djjs-backend
+  CONTAINER_NAME: djjs-backend
   HOST_PORT: 8080
   CONTAINER_PORT: 8080
-  ECR_REPOSITORY: 775727899931.dkr.ecr.ap-south-1.amazonaws.com/djjs-event-reporting-back
+  ECR_REPOSITORY: 775727899931.dkr.ecr.ap-south-1.amazonaws.com/djjs-backend
   AWS_REGION: ap-south-1
   BRIDGE_NETWORK: djjs-net   # ← custom bridge network
 
