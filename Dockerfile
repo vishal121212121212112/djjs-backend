@@ -1,5 +1,4 @@
 # syntax=docker/dockerfile:1
-
 # 1. Build stage
 FROM golang:1.25-alpine AS builder
 WORKDIR /app
@@ -8,8 +7,11 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source (including main.go in root)
+# Copy source
 COPY . .
+
+# (Optional) Add this to ensure missing deps are added
+RUN go mod tidy
 
 # Build static binary for Linux (optional: disable CGO to allow minimal base)
 ENV CGO_ENABLED=0 \
@@ -22,12 +24,10 @@ RUN go build -o /app/main ./main.go
 FROM alpine:latest
 WORKDIR /app
 
-# Optionally install CA certificates if needed
 RUN apk add --no-cache ca-certificates
 
 COPY --from=builder /app/main .
 
-# Add a non-root user (for security)
 RUN adduser -D appuser
 USER appuser
 
