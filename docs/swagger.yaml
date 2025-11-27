@@ -452,12 +452,14 @@ definitions:
   models.User:
     properties:
       contact_number:
+        maxLength: 20
         type: string
       created_by:
         type: string
       created_on:
         type: string
       email:
+        maxLength: 255
         type: string
       expired_on:
         type: string
@@ -470,6 +472,8 @@ definitions:
       last_login_on:
         type: string
       name:
+        maxLength: 255
+        minLength: 2
         type: string
       password:
         type: string
@@ -483,6 +487,10 @@ definitions:
         type: string
       updated_on:
         type: string
+    required:
+    - email
+    - name
+    - role_id
     type: object
   models.Volunteer:
     properties:
@@ -2442,6 +2450,91 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update a user
+      tags:
+      - Users
+  /api/users/{id}/change-password:
+    post:
+      consumes:
+      - application/json
+      description: User can change their password by providing old and new password
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Password change data (old_password, new_password, confirm_password)
+        in: body
+        name: passwordData
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Change user password
+      tags:
+      - Users
+  /api/users/{id}/reset-password:
+    post:
+      description: Admin can reset a user's password, generating a new temporary password
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Reset user password (admin only)
       tags:
       - Users
   /api/users/search:

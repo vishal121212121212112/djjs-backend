@@ -100,6 +100,8 @@ func main() {
 		api.GET("/users/:id", middleware.AuthMiddleware(), handlers.GetUserSearchHandler)
 		api.PUT("/users/:id", middleware.AuthMiddleware(), handlers.UpdateUserHandler)
 		api.DELETE("/users/:id", middleware.AuthMiddleware(), handlers.DeleteUserHandler)
+		api.POST("/users/:id/change-password", middleware.AuthMiddleware(), handlers.ChangePasswordHandler)
+		api.POST("/users/:id/reset-password", middleware.AuthMiddleware(), handlers.ResetPasswordHandler)
 
 		// Promotion CRUD
 		api.POST("/promotion-material-details", middleware.AuthMiddleware(), handlers.CreatePromotionMaterialDetailsHandler)
