@@ -17,7 +17,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param data body models.EventMedia true "Event Media Details"
-// @Success 201 {object} models.EventMedia
+// @Success 201 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/event-media [post]
@@ -33,8 +33,10 @@ func CreateEventMediaHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, media)
-
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Event Media created successfully",
+		"data":    media,
+	})
 }
 
 // GetAllEventMediaHandler retrieves all EventMedia records
@@ -43,7 +45,7 @@ func CreateEventMediaHandler(c *gin.Context) {
 // @Tags EventMedia
 // @Security ApiKeyAuth
 // @Produce json
-// @Success 200 {array} models.EventMedia
+// @Success 200 {object} map[string]interface{}
 // @Failure 500 {object} map[string]string
 // @Router /api/event-media [get]
 func GetAllEventMediaHandler(c *gin.Context) {
@@ -52,7 +54,10 @@ func GetAllEventMediaHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch records"})
 		return
 	}
-	c.JSON(http.StatusOK, medias)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Event Media fetched successfully",
+		"data":    medias,
+	})
 }
 
 // GetEventMediaByEventIDHandler godoc
@@ -62,7 +67,7 @@ func GetAllEventMediaHandler(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Produce json
 // @Param event_id path int true "Event ID"
-// @Success 200 {array} models.EventMedia
+// @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Router /api/event-media/event/{event_id} [get]
@@ -80,7 +85,10 @@ func GetEventMediaByEventIDHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, mediaList)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Event Media fetched successfully",
+		"data":    mediaList,
+	})
 }
 
 // UpdateEventMediaHandler updates an existing EventMedia record
@@ -92,7 +100,7 @@ func GetEventMediaByEventIDHandler(c *gin.Context) {
 // @Produce json
 // @Param id path int true "Event Media ID"
 // @Param data body models.EventMedia true "Updated details"
-// @Success 200 {object} models.EventMedia
+// @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/event-media/{id} [put]
@@ -117,8 +125,10 @@ func UpdateEventMediaHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, media)
-
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Event Media updated successfully",
+		"data":    media,
+	})
 }
 
 // DeleteEventMediaHandler deletes an EventMedia record by ID
@@ -128,7 +138,7 @@ func UpdateEventMediaHandler(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Produce json
 // @Param id path int true "Event Media ID"
-// @Success 204 "No Content"
+// @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Router /api/event-media/{id} [delete]
@@ -145,6 +155,5 @@ func DeleteEventMediaHandler(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
-
+	c.JSON(http.StatusOK, gin.H{"message": "Event Media deleted successfully"})
 }
