@@ -260,5 +260,15 @@ CREATE TABLE donations (
     updated_by VARCHAR(100)
 );
 
+CREATE TABLE districts (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    state_id INTEGER NOT NULL REFERENCES states(id),
+    country_id INTEGER NOT NULL REFERENCES countries(id)
+);
 
-
+CREATE TABLE cities (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    state_id INTEGER NOT NULL REFERENCES states(id)
+);
