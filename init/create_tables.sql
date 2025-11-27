@@ -247,4 +247,18 @@ CREATE TABLE volunteers (
     updated_by VARCHAR(100)
 );
 
+CREATE TABLE donations (
+    id SERIAL PRIMARY KEY,
+    event_id INTEGER NOT NULL,
+    branch_id INTEGER NOT NULL,
+    donation_type VARCHAR(255),
+    amount DOUBLE PRECISION,
+    kind_type VARCHAR(255),
+    created_on TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_on TIMESTAMPTZ,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100)
+);
+
+
 

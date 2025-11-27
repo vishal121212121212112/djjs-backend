@@ -17,7 +17,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param data body models.PromotionMaterialDetails true "Promotion Material Details"
-// @Success 201 {object} models.PromotionMaterialDetails
+// @Success 201 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/promotion-material-details [post]
@@ -33,7 +33,10 @@ func CreatePromotionMaterialDetailsHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, detail)
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Promotion Material Details created successfully",
+		"data":    detail,
+	})
 }
 
 // GetAllPromotionMaterialDetailsHandler godoc
@@ -42,7 +45,7 @@ func CreatePromotionMaterialDetailsHandler(c *gin.Context) {
 // @Tags PromotionMaterialDetails
 // @Security ApiKeyAuth
 // @Produce json
-// @Success 200 {array} models.PromotionMaterialDetails
+// @Success 200 {object} map[string]interface{}
 // @Failure 500 {object} map[string]string
 // @Router /api/promotion-material-details [get]
 func GetAllPromotionMaterialDetailsHandler(c *gin.Context) {
@@ -51,7 +54,11 @@ func GetAllPromotionMaterialDetailsHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch records"})
 		return
 	}
-	c.JSON(http.StatusOK, details)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Promotion Material Details fetched successfully",
+		"data":    details,
+	})
 }
 
 // GetPromotionMaterialDetailsByEventIDHandler godoc
@@ -61,7 +68,7 @@ func GetAllPromotionMaterialDetailsHandler(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Produce json
 // @Param event_id path int true "Event ID"
-// @Success 200 {array} models.PromotionMaterialDetails
+// @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Router /api/promotion-material-details/event/{event_id} [get]
@@ -79,7 +86,10 @@ func GetPromotionMaterialDetailsByEventIDHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, details)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Promotion Material Details fetched successfully",
+		"data":    details,
+	})
 }
 
 // UpdatePromotionMaterialDetailsHandler godoc
@@ -91,7 +101,7 @@ func GetPromotionMaterialDetailsByEventIDHandler(c *gin.Context) {
 // @Produce json
 // @Param id path int true "Promotion Material Details ID"
 // @Param data body models.PromotionMaterialDetails true "Updated details"
-// @Success 200 {object} models.PromotionMaterialDetails
+// @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/promotion-material-details/{id} [put]
@@ -112,7 +122,10 @@ func UpdatePromotionMaterialDetailsHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, detail)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Promotion Material Details updated successfully",
+		"data":    detail,
+	})
 }
 
 // DeletePromotionMaterialDetailsHandler godoc
@@ -122,7 +135,7 @@ func UpdatePromotionMaterialDetailsHandler(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Produce json
 // @Param id path int true "Promotion Material Details ID"
-// @Success 204 "No Content"
+// @Success 200 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Router /api/promotion-material-details/{id} [delete]
 func DeletePromotionMaterialDetailsHandler(c *gin.Context) {
@@ -134,5 +147,5 @@ func DeletePromotionMaterialDetailsHandler(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusOK, gin.H{"message": "Promotion Material Details deleted successfully"})
 }

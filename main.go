@@ -157,6 +157,25 @@ func main() {
 		api.PUT("/events/:id", middleware.AuthMiddleware(), handlers.UpdateEventHandler)
 		api.DELETE("/events/:id", middleware.AuthMiddleware(), handlers.DeleteEventHandler)
 
+		// Donation CRUD Routes
+		api.POST("/donations", middleware.AuthMiddleware(), handlers.CreateDonation)
+		api.GET("/donations", middleware.AuthMiddleware(), handlers.GetAllDonations)
+		api.GET("/events/:event_id/donations", middleware.AuthMiddleware(), handlers.GetDonationsByEvent)
+		api.PUT("/donations/:id", middleware.AuthMiddleware(), handlers.UpdateDonation)
+		api.DELETE("/donations/:id", middleware.AuthMiddleware(), handlers.DeleteDonation)
+
+		//Master APIS for Dropdown
+		api.GET("/event-types", middleware.AuthMiddleware(), handlers.GetAllEventTypesHandler)
+		api.GET("/event-categories", middleware.AuthMiddleware(), handlers.GetAllEventCategoriesHandler)
+		api.GET("/countries", middleware.AuthMiddleware(), handlers.GetAllCountriesHandler)
+		api.GET("/states", middleware.AuthMiddleware(), handlers.GetAllStatesHandler)                             // all
+		api.GET("/countries/:country_id/states", middleware.AuthMiddleware(), handlers.GetStatesByCountryHandler) // filtered
+		api.GET("/cities", middleware.AuthMiddleware(), handlers.GetAllCitiesHandler)                             // all
+		api.GET("/cities/by-state", middleware.AuthMiddleware(), handlers.GetCitiesByStateHandler)                // filtered
+		api.GET("/districts", middleware.AuthMiddleware(), handlers.GetDistrictsHandler)                          // filtered
+		api.GET("/districts/all", middleware.AuthMiddleware(), handlers.GetAllDistrictsHandler)                   // all districts
+		api.GET("/promotion-material-types", middleware.AuthMiddleware(), handlers.GetAllPromotionMaterialTypesHandler)
+
 	}
 
 	// 7️⃣ Start server

@@ -78,3 +78,27 @@ INSERT INTO event_types (name) VALUES ('Spiritual'),('Cultural'),('Peace Process
 
 -- Event Categories (FK → event_types)
 INSERT INTO event_categories (name, event_type_id) VALUES ('Ram Katha',1),('Krishna Katha',1),('Bhajan Sandhya',1),('Meditation Event',1);
+
+INSERT INTO districts (id, name, state_id, country_id) VALUES
+(1, 'Mathura', 1, 1),
+(2, 'Agra', 1, 1),
+(3, 'Mumbai Suburban', 2, 1),
+(4, 'Pune', 2, 1),
+(5, 'Bangalore Urban', 3, 1),
+(6, 'Mysore', 3, 1),
+(7, 'Lucknow', 1, 1),
+(8, 'Nagpur', 2, 1),
+(9, 'Gulbarga', 3, 1),
+(10, 'Varanasi', 1, 1);
+
+INSERT INTO cities (id, name, state_id) VALUES
+(1, 'Mathura City', 1),
+(2, 'Agra City', 1),
+(3, 'Mumbai', 2),
+(4, 'Pune City', 2),
+(5, 'Bangalore', 3),
+(6, 'Mysore City', 3),
+(7, 'Lucknow City', 1),
+(8, 'Nagpur City', 2),
+(9, 'Gulbarga City', 3),
+(10, 'Varanasi City', 1);
