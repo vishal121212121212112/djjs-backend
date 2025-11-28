@@ -42,16 +42,23 @@ definitions:
   models.Branch:
     properties:
       aashram_area:
+        minimum: 0
         type: number
       address:
+        maxLength: 500
         type: string
       city:
+        maxLength: 100
         type: string
       contact_number:
+        maxLength: 20
         type: string
       coordinator_name:
+        maxLength: 255
+        minLength: 2
         type: string
       country:
+        maxLength: 100
         type: string
       created_by:
         type: string
@@ -62,38 +69,50 @@ definitions:
       daily_start_time:
         type: string
       district:
+        maxLength: 100
         type: string
       email:
+        maxLength: 255
         type: string
       established_on:
         type: string
       id:
         type: integer
       name:
+        maxLength: 255
+        minLength: 2
         type: string
       open_days:
-        description: e.g. "Mon-Fri"
+        maxLength: 100
         type: string
       pincode:
         type: string
       police_station:
+        maxLength: 100
         type: string
       post_office:
+        maxLength: 100
         type: string
       state:
+        maxLength: 100
         type: string
       updated_by:
         type: string
       updated_on:
         type: string
+    required:
+    - contact_number
+    - name
     type: object
   models.BranchInfrastructure:
     properties:
       branch:
         $ref: '#/definitions/models.Branch'
       branch_id:
+        minimum: 1
         type: integer
       count:
+        minimum: 0
         type: integer
       created_by:
         type: string
@@ -102,21 +121,31 @@ definitions:
       id:
         type: integer
       type:
+        maxLength: 100
+        minLength: 2
         type: string
       updated_by:
         type: string
       updated_on:
         type: string
+    required:
+    - branch_id
+    - count
+    - type
     type: object
   models.BranchMember:
     properties:
       age:
+        maximum: 150
+        minimum: 0
         type: integer
       branch:
         $ref: '#/definitions/models.Branch'
       branch_id:
+        minimum: 1
         type: integer
       branch_role:
+        maxLength: 100
         type: string
       created_by:
         type: string
@@ -129,17 +158,27 @@ definitions:
       id:
         type: integer
       member_type:
+        maxLength: 100
+        minLength: 2
         type: string
       name:
+        maxLength: 255
+        minLength: 2
         type: string
       qualification:
+        maxLength: 255
         type: string
       responsibility:
+        maxLength: 500
         type: string
       updated_by:
         type: string
       updated_on:
         type: string
+    required:
+    - branch_id
+    - member_type
+    - name
     type: object
   models.City:
     properties:
@@ -452,12 +491,14 @@ definitions:
   models.User:
     properties:
       contact_number:
+        maxLength: 20
         type: string
       created_by:
         type: string
       created_on:
         type: string
       email:
+        maxLength: 255
         type: string
       expired_on:
         type: string
@@ -470,6 +511,8 @@ definitions:
       last_login_on:
         type: string
       name:
+        maxLength: 255
+        minLength: 2
         type: string
       password:
         type: string
@@ -483,12 +526,17 @@ definitions:
         type: string
       updated_on:
         type: string
+    required:
+    - email
+    - name
+    - role_id
     type: object
   models.Volunteer:
     properties:
       branch:
         $ref: '#/definitions/models.Branch'
       branch_id:
+        minimum: 1
         type: integer
       created_by:
         type: string
@@ -497,23 +545,34 @@ definitions:
       event:
         $ref: '#/definitions/models.Event'
       event_id:
+        minimum: 1
         type: integer
       id:
         type: integer
       mention_seva:
+        maxLength: 500
+        minLength: 2
         type: string
       number_of_days:
+        maximum: 365
+        minimum: 0
         type: integer
-      search_volunteer:
-        type: string
       seva_involved:
+        maxLength: 500
+        minLength: 2
         type: string
       updated_by:
         type: string
       updated_on:
         type: string
       volunteer_name:
+        maxLength: 255
+        minLength: 2
         type: string
+    required:
+    - branch_id
+    - event_id
+    - volunteer_name
     type: object
 host: eventsreportingapi.djjs.org
 info:
@@ -1839,7 +1898,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Volunteer'
+            items:
+              $ref: '#/definitions/models.Volunteer'
+            type: array
         "400":
           description: Bad Request
           schema:
@@ -1854,7 +1915,7 @@ paths:
             type: object
       security:
       - ApiKeyAuth: []
-      summary: Get volunteer by event ID
+      summary: Get volunteers by event ID
       tags:
       - Volunteers
   /api/events/{id}:
@@ -2442,6 +2503,91 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update a user
+      tags:
+      - Users
+  /api/users/{id}/change-password:
+    post:
+      consumes:
+      - application/json
+      description: User can change their password by providing old and new password
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Password change data (old_password, new_password, confirm_password)
+        in: body
+        name: passwordData
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Change user password
+      tags:
+      - Users
+  /api/users/{id}/reset-password:
+    post:
+      description: Admin can reset a user's password, generating a new temporary password
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Reset user password (admin only)
       tags:
       - Users
   /api/users/search:

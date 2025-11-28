@@ -7,6 +7,7 @@ import (
 
 	"github.com/followCode/djjs-event-reporting-backend/app/models"
 	"github.com/followCode/djjs-event-reporting-backend/app/services"
+	"github.com/followCode/djjs-event-reporting-backend/app/validators"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,6 +26,12 @@ import (
 func CreateVolunteerHandler(c *gin.Context) {
 	var volunteer models.Volunteer
 	if err := c.ShouldBindJSON(&volunteer); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Validate volunteer input
+	if err := validators.ValidateVolunteerInput(volunteer.VolunteerName, volunteer.BranchID, volunteer.EventID, volunteer.NumberOfDays); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -54,13 +61,13 @@ func GetAllVolunteersHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, volunteers)
 }
 
-// GetVolunteerByEventID returns the volunteer linked to an event
-// @Summary Get volunteer by event ID
+// GetVolunteerByEventID returns all volunteers linked to an event
+// @Summary Get volunteers by event ID
 // @Tags Volunteers
 // @Security ApiKeyAuth
 // @Produce json
 // @Param event_id path int true "Event ID"
-// @Success 200 {object} models.Volunteer
+// @Success 200 {array} models.Volunteer
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Router /api/events/{event_id}/volunteers [get]
@@ -104,6 +111,12 @@ func UpdateVolunteerHandler(c *gin.Context) {
 
 	var payload map[string]interface{}
 	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Validate update fields
+	if err := validators.ValidateVolunteerUpdateFields(payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -157,13 +170,11 @@ func DeleteVolunteerHandler(c *gin.Context) {
 
 func sanitizeVolunteerUpdates(payload map[string]interface{}) map[string]interface{} {
 	allowed := map[string]struct{}{
-		"branch_id":        {},
-		"search_volunteer": {},
-		"volunteer_name":   {},
-		"number_of_days":   {},
-		"seva_involved":    {},
-		"mention_seva":     {},
-		"updated_by":       {},
+		"volunteer_name": {},
+		"number_of_days": {},
+		"seva_involved":  {},
+		"mention_seva":   {},
+		"updated_by":     {},
 	}
 
 	sanitized := make(map[string]interface{})

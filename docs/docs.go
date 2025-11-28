@@ -2127,7 +2127,7 @@ const docTemplate = `{
                 "tags": [
                     "Volunteers"
                 ],
-                "summary": "Get volunteer by event ID",
+                "summary": "Get volunteers by event ID",
                 "parameters": [
                     {
                         "type": "integer",
@@ -2141,7 +2141,10 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Volunteer"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Volunteer"
+                            }
                         }
                     },
                     "400": {
@@ -3093,6 +3096,138 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/users/{id}/change-password": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "User can change their password by providing old and new password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Change user password",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Password change data (old_password, new_password, confirm_password)",
+                        "name": "passwordData",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/{id}/reset-password": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Admin can reset a user's password, generating a new temporary password",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Reset user password (admin only)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/volunteers": {
             "get": {
                 "security": [
@@ -3464,24 +3599,35 @@ const docTemplate = `{
         },
         "models.Branch": {
             "type": "object",
+            "required": [
+                "contact_number",
+                "name"
+            ],
             "properties": {
                 "aashram_area": {
-                    "type": "number"
+                    "type": "number",
+                    "minimum": 0
                 },
                 "address": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 500
                 },
                 "city": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "contact_number": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "coordinator_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 2
                 },
                 "country": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "created_by": {
                     "type": "string"
@@ -3496,10 +3642,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "district": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                 },
                 "established_on": {
                     "type": "string"
@@ -3508,23 +3656,28 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 2
                 },
                 "open_days": {
-                    "description": "e.g. \"Mon-Fri\"",
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "pincode": {
                     "type": "string"
                 },
                 "police_station": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "post_office": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "state": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "updated_by": {
                     "type": "string"
@@ -3536,15 +3689,22 @@ const docTemplate = `{
         },
         "models.BranchInfrastructure": {
             "type": "object",
+            "required": [
+                "branch_id",
+                "count",
+                "type"
+            ],
             "properties": {
                 "branch": {
                     "$ref": "#/definitions/models.Branch"
                 },
                 "branch_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "minimum": 1
                 },
                 "count": {
-                    "type": "integer"
+                    "type": "integer",
+                    "minimum": 0
                 },
                 "created_by": {
                     "type": "string"
@@ -3556,7 +3716,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "type": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
                 },
                 "updated_by": {
                     "type": "string"
@@ -3568,18 +3730,27 @@ const docTemplate = `{
         },
         "models.BranchMember": {
             "type": "object",
+            "required": [
+                "branch_id",
+                "member_type",
+                "name"
+            ],
             "properties": {
                 "age": {
-                    "type": "integer"
+                    "type": "integer",
+                    "maximum": 150,
+                    "minimum": 0
                 },
                 "branch": {
                     "$ref": "#/definitions/models.Branch"
                 },
                 "branch_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "minimum": 1
                 },
                 "branch_role": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "created_by": {
                     "type": "string"
@@ -3597,16 +3768,22 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "member_type": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 2
                 },
                 "qualification": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                 },
                 "responsibility": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 500
                 },
                 "updated_by": {
                     "type": "string"
@@ -4089,9 +4266,15 @@ const docTemplate = `{
         },
         "models.User": {
             "type": "object",
+            "required": [
+                "email",
+                "name",
+                "role_id"
+            ],
             "properties": {
                 "contact_number": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "created_by": {
                     "type": "string"
@@ -4100,7 +4283,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                 },
                 "expired_on": {
                     "type": "string"
@@ -4118,7 +4302,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 2
                 },
                 "password": {
                     "type": "string"
@@ -4142,12 +4328,18 @@ const docTemplate = `{
         },
         "models.Volunteer": {
             "type": "object",
+            "required": [
+                "branch_id",
+                "event_id",
+                "volunteer_name"
+            ],
             "properties": {
                 "branch": {
                     "$ref": "#/definitions/models.Branch"
                 },
                 "branch_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "minimum": 1
                 },
                 "created_by": {
                     "type": "string"
@@ -4159,22 +4351,26 @@ const docTemplate = `{
                     "$ref": "#/definitions/models.Event"
                 },
                 "event_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "minimum": 1
                 },
                 "id": {
                     "type": "integer"
                 },
                 "mention_seva": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 500,
+                    "minLength": 2
                 },
                 "number_of_days": {
-                    "type": "integer"
-                },
-                "search_volunteer": {
-                    "type": "string"
+                    "type": "integer",
+                    "maximum": 365,
+                    "minimum": 0
                 },
                 "seva_involved": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 500,
+                    "minLength": 2
                 },
                 "updated_by": {
                     "type": "string"
@@ -4183,7 +4379,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "volunteer_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 2
                 }
             }
         }

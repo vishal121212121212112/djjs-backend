@@ -235,7 +235,6 @@ CREATE TABLE special_guests (
 CREATE TABLE volunteers (
     id BIGSERIAL PRIMARY KEY,
     branch_id BIGINT NOT NULL REFERENCES branches(id) ON DELETE CASCADE,
-    search_volunteer VARCHAR(150),
     volunteer_name VARCHAR(150) NOT NULL,
     number_of_days INTEGER,
     seva_involved VARCHAR(100),

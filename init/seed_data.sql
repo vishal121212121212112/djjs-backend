@@ -16,10 +16,8 @@ VALUES (1, gen_random_uuid(), 75.5, 'North Zone', 60.2, 'admin', 'system'),
 --Users
 INSERT INTO users (name, email, contact_number, password, role_id, is_deleted, created_on, created_by) 
 VALUES 
-('Admin User', 'admin@example.com', '9876543210', 'admin123', 1, FALSE, NOW(), 'system'),
-('Staff User', 'staff1@example.com', '9123456780', 'staff123', 2, FALSE, NOW(), 'system'),
-('Aarav Sharma', 'aarav.sharma@example.com', '9876543211', 'hashedpassword1', 1, FALSE, NOW(), 'system'), 
-('Priya Mehta', 'priya.mehta@example.com', '9123456781', 'hashedpassword2', 2, FALSE, NOW(), 'system');
+('Admin User', 'admin@example.com', '9876543210', '$2a$10$oKmRjWC3/0ESYAkmOcNdCeHXJryFuDAF3HuTp5vVElsUERgJf7956', 1, FALSE, NOW(), 'system'),
+('Staff User', 'staff1@example.com', '9123456780', '$2a$10$TwNFNphjv/1s4WwXPl0l8udRyTdbEM5p32yfKXeW3U4kE6klY6tTa', 2, FALSE, NOW(), 'system'),
 
 --Countries
 INSERT INTO countries (name) VALUES ('India'), ('USA');

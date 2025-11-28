@@ -13,6 +13,18 @@ var ErrVolunteerNotFound = errors.New("volunteer not found")
 
 // CreateVolunteer persists a new volunteer record
 func CreateVolunteer(volunteer *models.Volunteer) error {
+	// Validate that branch exists
+	var branch models.Branch
+	if err := config.DB.First(&branch, volunteer.BranchID).Error; err != nil {
+		return errors.New("invalid branch_id: branch does not exist")
+	}
+
+	// Validate that event exists
+	var event models.Event
+	if err := config.DB.First(&event, volunteer.EventID).Error; err != nil {
+		return errors.New("invalid event_id: event does not exist")
+	}
+
 	now := time.Now()
 	volunteer.CreatedOn = now
 	volunteer.UpdatedOn = nil
@@ -36,11 +48,15 @@ func GetAllVolunteers() ([]models.Volunteer, error) {
 func GetVolunteerByEventID(eventID uint) ([]models.Volunteer, error) {
 	var volunteers []models.Volunteer
 
-	if err := config.DB.Where("event_id = ?", eventID).Find(&volunteers).Error; err != nil {
+	if err := config.DB.Where("event_id = ?", eventID).Preload("Branch").Preload("Event").Find(&volunteers).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrVolunteerNotFound
 		}
 		return nil, err
+	}
+
+	if len(volunteers) == 0 {
+		return nil, ErrVolunteerNotFound
 	}
 
 	return volunteers, nil
