@@ -242,3 +242,23 @@ func GetAllPromotionMaterialTypesHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, list)
 }
+
+// GetCoordinatorDropdownHandler godoc
+// @Summary Get Coordinator Dropdown
+// @Description Returns a list of coordinators (id & name) from branch_member table where branch_role = 'coordinator'
+// @Tags BranchCoordinator
+// @Security ApiKeyAuth
+// @Produce json
+// @Success 200 {array} models.BranchMember
+// @Failure 500 {object} map[string]string
+// @Router /api/coordinators [get]
+func GetCoordinatorDropdownHandler(c *gin.Context) {
+
+	list, err := services.GetCoordinatorDropdownService()
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, list)
+}

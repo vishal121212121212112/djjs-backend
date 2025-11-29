@@ -1311,6 +1311,30 @@ paths:
       summary: Get cities by state
       tags:
       - Cities
+  /api/coordinators:
+    get:
+      description: Returns a list of coordinators (id & name) from branch_member table
+        where branch_role = 'coordinator'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.BranchMember'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Coordinator Dropdown
+      tags:
+      - BranchCoordinator
   /api/countries:
     get:
       description: Returns a list of all countries

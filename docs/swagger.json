@@ -1158,6 +1158,43 @@
                 }
             }
         },
+        "/api/coordinators": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns a list of coordinators (id \u0026 name) from branch_member table where branch_role = 'coordinator'",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BranchCoordinator"
+                ],
+                "summary": "Get Coordinator Dropdown",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.BranchMember"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/countries": {
             "get": {
                 "security": [
