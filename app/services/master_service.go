@@ -112,3 +112,21 @@ func GetAllPromotionMaterialTypesService() ([]models.PromotionMaterial, error) {
 	}
 	return list, nil
 }
+
+// GetCoordinatorsDropdownService
+func GetCoordinatorDropdownService() ([]models.BranchMember, error) {
+	var list []models.BranchMember
+
+	err := config.DB.
+		Model(&models.BranchMember{}).
+		Select("id, name").
+		Where("branch_role = ?", "Coordinator").
+		Order("name ASC").
+		Find(&list).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return list, nil
+}
