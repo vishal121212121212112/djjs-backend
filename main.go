@@ -120,6 +120,7 @@ func main() {
 		// Branch CRUD
 		api.POST("/branches", middleware.AuthMiddleware(), handlers.CreateBranchHandler)
 		api.GET("/branches", middleware.AuthMiddleware(), handlers.GetAllBranchesHandler)
+		api.GET("/branches/:id", middleware.AuthMiddleware(), handlers.GetBranchHandler)
 		api.GET("/branches/search", middleware.AuthMiddleware(), handlers.GetBranchSearchHandler)
 		api.PUT("/branches/:id", middleware.AuthMiddleware(), handlers.UpdateBranchHandler)
 		api.DELETE("/branches/:id", middleware.AuthMiddleware(), handlers.DeleteBranchHandler)

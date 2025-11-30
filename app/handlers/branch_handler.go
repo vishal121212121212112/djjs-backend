@@ -62,6 +62,33 @@ func GetAllBranchesHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, branches)
 }
 
+// GetBranchHandler godoc
+// @Summary Get a branch by ID
+// @Tags Branches
+// @Security ApiKeyAuth
+// @Produce json
+// @Param id path int true "Branch ID"
+// @Success 200 {object} models.Branch
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /api/branches/{id} [get]
+func GetBranchHandler(c *gin.Context) {
+	idParam := c.Param("id")
+	branchID, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid branch ID"})
+		return
+	}
+
+	branch, err := services.GetBranch(uint(branchID))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, branch)
+}
+
 // GetBranchSearchHandler godoc
 // @Summary Get branches by name or coordinator (or all if none provided)
 // @Description Retrieve branches by name and/or coordinator name, or list all if no filters.

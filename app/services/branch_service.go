@@ -42,6 +42,15 @@ func GetAllBranches() ([]models.Branch, error) {
 	return branches, nil
 }
 
+// GetBranch fetches a branch by ID
+func GetBranch(branchID uint) (*models.Branch, error) {
+	var branch models.Branch
+	if err := config.DB.First(&branch, branchID).Error; err != nil {
+		return nil, errors.New("branch not found")
+	}
+	return &branch, nil
+}
+
 // GetBranchSearch fetches branches by name and/or coordinator name
 func GetBranchSearch(branchName, coordinator string) ([]models.Branch, error) {
 	var branches []models.Branch
