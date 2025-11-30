@@ -84,7 +84,16 @@ func CreateBranch(branch *models.Branch) error {
 // GetAllBranches fetches all branches
 func GetAllBranches() ([]models.Branch, error) {
 	var branches []models.Branch
-	if err := config.DB.Preload("Country").Preload("State").Preload("District").Preload("City").Find(&branches).Error; err != nil {
+	if err := config.DB.
+		Select("id", "name", "email", "coordinator_name", "contact_number", "established_on", "aashram_area",
+			"country_id", "state_id", "district_id", "city_id",
+			"address", "pincode", "post_office", "police_station", "open_days",
+			"daily_start_time", "daily_end_time", "created_on", "updated_on", "created_by", "updated_by").
+		Preload("Country").
+		Preload("State").
+		Preload("District").
+		Preload("City").
+		Find(&branches).Error; err != nil {
 		return nil, err
 	}
 	return branches, nil
@@ -93,7 +102,16 @@ func GetAllBranches() ([]models.Branch, error) {
 // GetBranch fetches a branch by ID
 func GetBranch(branchID uint) (*models.Branch, error) {
 	var branch models.Branch
-	if err := config.DB.Preload("Country").Preload("State").Preload("District").Preload("City").First(&branch, branchID).Error; err != nil {
+	if err := config.DB.
+		Select("id", "name", "email", "coordinator_name", "contact_number", "established_on", "aashram_area",
+			"country_id", "state_id", "district_id", "city_id",
+			"address", "pincode", "post_office", "police_station", "open_days",
+			"daily_start_time", "daily_end_time", "created_on", "updated_on", "created_by", "updated_by").
+		Preload("Country").
+		Preload("State").
+		Preload("District").
+		Preload("City").
+		First(&branch, branchID).Error; err != nil {
 		return nil, errors.New("branch not found")
 	}
 	return &branch, nil
@@ -102,7 +120,15 @@ func GetBranch(branchID uint) (*models.Branch, error) {
 // GetBranchSearch fetches branches by name and/or coordinator name
 func GetBranchSearch(branchName, coordinator string) ([]models.Branch, error) {
 	var branches []models.Branch
-	db := config.DB.Preload("Country").Preload("State").Preload("District").Preload("City")
+	db := config.DB.
+		Select("id", "name", "email", "coordinator_name", "contact_number", "established_on", "aashram_area",
+			"country_id", "state_id", "district_id", "city_id",
+			"address", "pincode", "post_office", "police_station", "open_days",
+			"daily_start_time", "daily_end_time", "created_on", "updated_on", "created_by", "updated_by").
+		Preload("Country").
+		Preload("State").
+		Preload("District").
+		Preload("City")
 
 	// Apply filters dynamically
 	if branchName != "" {
