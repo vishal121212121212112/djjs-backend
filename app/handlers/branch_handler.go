@@ -318,25 +318,32 @@ func GetAllBranchesHandler(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Produce json
 // @Param id path int true "Branch ID"
-// @Success 200 {object} models.Branch
+// @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Router /api/branches/{id} [get]
 func GetBranchHandler(c *gin.Context) {
 	idParam := c.Param("id")
+
 	branchID, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid branch ID"})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid branch ID",
+		})
 		return
 	}
 
 	branch, err := services.GetBranch(uint(branchID))
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	c.JSON(http.StatusOK, branch)
+	c.JSON(http.StatusOK, gin.H{
+		"branch": branch,
+	})
 }
 
 // GetBranchSearchHandler godoc
