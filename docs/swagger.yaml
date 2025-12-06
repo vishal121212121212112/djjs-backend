@@ -68,6 +68,22 @@ definitions:
         type: string
       daily_start_time:
         type: string
+      parent_branch_id:
+        type: integer
+      parent:
+        $ref: '#/definitions/models.Branch'
+      children:
+        items:
+          $ref: '#/definitions/models.Branch'
+        type: array
+      infrastructure:
+        items:
+          $ref: '#/definitions/models.BranchInfrastructure'
+        type: array
+      branch_members:
+        items:
+          $ref: '#/definitions/models.BranchMember'
+        type: array
       district:
         maxLength: 100
         type: string
@@ -694,6 +710,11 @@ paths:
         schema:
           additionalProperties: true
           type: object
+      description: |
+        Update a branch. Notes:
+          - `child_branches` in the payload is treated as additive/patch-like: provided child IDs will be linked to this parent by setting their `parent_branch_id`, but existing child branches omitted from the list will NOT be unlinked automatically.
+          - To unlink a previously-linked child, update that child directly or provide an explicit unlink operation.
+          - If `infrastructure` is provided, existing infrastructure entries for the branch will be replaced by the provided list.
       produces:
       - application/json
       responses:
@@ -1223,17 +1244,14 @@ paths:
         name: branch
         required: true
         schema:
-          additionalProperties: true
-          type: object
+          $ref: '#/definitions/models.Branch'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/models.Branch'
         "400":
           description: Bad Request
           schema:
