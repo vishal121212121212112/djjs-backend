@@ -157,8 +157,14 @@ func main() {
 		api.POST("/events", middleware.AuthMiddleware(), handlers.CreateEventHandler)
 		api.GET("/events", middleware.AuthMiddleware(), handlers.GetAllEventsHandler)
 		api.GET("/events/search", middleware.AuthMiddleware(), handlers.SearchEventsHandler)
-		api.PUT("/events/:id", middleware.AuthMiddleware(), handlers.UpdateEventHandler)
-		api.DELETE("/events/:id", middleware.AuthMiddleware(), handlers.DeleteEventHandler)
+		api.GET("/events/:event_id", middleware.AuthMiddleware(), handlers.GetEventByIdHandler)
+		api.GET("/events/:event_id/download", middleware.AuthMiddleware(), handlers.DownloadEventHandler)
+		api.PUT("/events/:event_id", middleware.AuthMiddleware(), handlers.UpdateEventHandler)
+		api.DELETE("/events/:event_id", middleware.AuthMiddleware(), handlers.DeleteEventHandler)
+		api.PATCH("/events/:event_id/status", middleware.AuthMiddleware(), handlers.UpdateEventStatusHandler)
+		api.POST("/events/draft", middleware.AuthMiddleware(), handlers.SaveDraftHandler)
+		api.GET("/events/draft/latest", middleware.AuthMiddleware(), handlers.GetLatestDraftByUserHandler)
+		api.GET("/events/draft/:draftId", middleware.AuthMiddleware(), handlers.GetDraftHandler)
 
 		// Donation CRUD Routes
 		api.POST("/donations", middleware.AuthMiddleware(), handlers.CreateDonation)

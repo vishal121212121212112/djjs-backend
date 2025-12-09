@@ -1,5 +1,57 @@
 basePath: /
 definitions:
+  handlers.BranchCreateRequest:
+    properties:
+      aashram_area:
+        type: number
+      address:
+        type: string
+      city:
+        description: Can be string or number
+      city_id:
+        type: integer
+      contact_number:
+        type: string
+      coordinator_name:
+        type: string
+      country:
+        description: Support both old format (strings) and new format (integers)
+      country_id:
+        type: integer
+      created_by:
+        type: string
+      daily_end_time:
+        type: string
+      daily_start_time:
+        type: string
+      district:
+        description: Can be string or number
+      district_id:
+        type: integer
+      email:
+        type: string
+      established_on:
+        type: string
+      name:
+        type: string
+      open_days:
+        type: string
+      pincode:
+        type: string
+      police_station:
+        type: string
+      post_office:
+        type: string
+      state:
+        description: Can be string or number
+      state_id:
+        type: integer
+      updated_by:
+        type: string
+    required:
+    - contact_number
+    - name
+    type: object
   handlers.LoginRequest:
     properties:
       email:
@@ -48,8 +100,10 @@ definitions:
         maxLength: 500
         type: string
       city:
-        maxLength: 100
-        type: string
+        $ref: '#/definitions/models.City'
+      city_id:
+        minimum: 1
+        type: integer
       contact_number:
         maxLength: 20
         type: string
@@ -58,8 +112,10 @@ definitions:
         minLength: 2
         type: string
       country:
-        maxLength: 100
-        type: string
+        $ref: '#/definitions/models.Country'
+      country_id:
+        minimum: 1
+        type: integer
       created_by:
         type: string
       created_on:
@@ -69,8 +125,10 @@ definitions:
       daily_start_time:
         type: string
       district:
-        maxLength: 100
-        type: string
+        $ref: '#/definitions/models.District'
+      district_id:
+        minimum: 1
+        type: integer
       email:
         maxLength: 255
         type: string
@@ -94,8 +152,10 @@ definitions:
         maxLength: 100
         type: string
       state:
-        maxLength: 100
-        type: string
+        $ref: '#/definitions/models.State'
+      state_id:
+        minimum: 1
+        type: integer
       updated_by:
         type: string
       updated_on:
@@ -274,9 +334,9 @@ definitions:
       created_on:
         type: string
       daily_end_time:
-        type: string
+        $ref: '#/definitions/models.TimeOnly'
       daily_start_time:
-        type: string
+        $ref: '#/definitions/models.TimeOnly'
       district:
         type: string
       end_date:
@@ -308,6 +368,8 @@ definitions:
       start_date:
         type: string
       state:
+        type: string
+      status:
         type: string
       theme:
         type: string
@@ -488,6 +550,11 @@ definitions:
       name:
         type: string
     type: object
+  models.TimeOnly:
+    properties:
+      time.Time:
+        type: string
+    type: object
   models.User:
     properties:
       contact_number:
@@ -574,7 +641,7 @@ definitions:
     - event_id
     - volunteer_name
     type: object
-host: eventsreportingapi.djjs.org
+host: localhost:8080
 info:
   contact:
     email: vaish@gmail.com
@@ -1118,7 +1185,7 @@ paths:
         name: branch
         required: true
         schema:
-          $ref: '#/definitions/models.Branch'
+          $ref: '#/definitions/handlers.BranchCreateRequest'
       produces:
       - application/json
       responses:
@@ -1145,37 +1212,6 @@ paths:
       tags:
       - Branches
   /api/branches/{id}:
-    get:
-      parameters:
-      - description: Branch ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Branch'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get a branch by ID
-      tags:
-      - Branches
     delete:
       parameters:
       - description: Branch ID
@@ -1207,6 +1243,37 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Delete a branch
+      tags:
+      - Branches
+    get:
+      parameters:
+      - description: Branch ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Branch'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a branch by ID
       tags:
       - Branches
     put:
@@ -1817,6 +1884,12 @@ paths:
       - EventTypes
   /api/events:
     get:
+      description: Get all events, optionally filtered by status (complete/incomplete)
+      parameters:
+      - description: 'Filter by status: complete or incomplete'
+        in: query
+        name: status
+        type: string
       produces:
       - application/json
       responses:
@@ -1840,20 +1913,60 @@ paths:
     post:
       consumes:
       - application/json
+      description: Creates a new event from frontend payload structure. Accepts generalDetails,
+        mediaPromotion, involvedParticipants, donationTypes, materialTypes, specialGuests,
+        volunteers, uploadedFiles, and optional draftId. If draftId is provided, the
+        draft will be automatically deleted from event_drafts table after successful
+        event creation.
       parameters:
-      - description: Event payload
+      - description: Frontend event payload
         in: body
         name: event
         required: true
         schema:
-          $ref: '#/definitions/models.EventDetails'
+          type: object
       produces:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Event created successfully" example({"message":"Event created
+            successfully","event":{"id":1,"event_type_id":1,"event_category_id":1}})
           schema:
             additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request" example({"error":"Invalid event data"})
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error" example({"error":"Failed to create event"})
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new event
+      tags:
+      - Events
+  /api/events/{event_id}:
+    delete:
+      parameters:
+      - description: Event ID
+        in: path
+        name: event_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
             type: object
         "400":
           description: Bad Request
@@ -1869,7 +1982,88 @@ paths:
             type: object
       security:
       - ApiKeyAuth: []
-      summary: Create a new event
+      summary: Delete an event
+      tags:
+      - Events
+    get:
+      description: Get a single event by its ID
+      parameters:
+      - description: Event ID
+        in: path
+        name: event_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.EventDetails'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get event by ID
+      tags:
+      - Events
+    put:
+      consumes:
+      - application/json
+      description: Updates an event. Accepts both flat structure (for simple updates)
+        and nested frontend payload structure (for full updates with related data)
+      parameters:
+      - description: Event ID
+        in: path
+        name: event_id
+        required: true
+        type: integer
+      - description: Updated fields (can be flat or nested frontend payload)
+        in: body
+        name: event
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update an event
       tags:
       - Events
   /api/events/{event_id}/donations:
@@ -1907,6 +2101,46 @@ paths:
       summary: Get Donations by Event ID
       tags:
       - Donations
+  /api/events/{event_id}/download:
+    get:
+      description: Downloads event data in a downloadable format (JSON for now, PDF
+        can be added later)
+      parameters:
+      - description: Event ID
+        in: path
+        name: event_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Event data file
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Download event data as PDF/JSON
+      tags:
+      - Events
   /api/events/{event_id}/specialguests:
     get:
       parameters:
@@ -1939,6 +2173,57 @@ paths:
       summary: Get special guest by event ID
       tags:
       - SpecialGuests
+  /api/events/{event_id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update the status of an event (complete or incomplete)
+      parameters:
+      - description: Event ID
+        in: path
+        name: event_id
+        required: true
+        type: integer
+      - description: Status update
+        in: body
+        name: status
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Status updated successfully" example({"message":"Event status
+            updated successfully","status":"complete"})
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request" example({"error":"Invalid status. Must be 'complete'
+            or 'incomplete'"})
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found" example({"error":"Event not found"})
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error" example({"error":"Failed to update event
+            status"})
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update event status
+      tags:
+      - Events
   /api/events/{event_id}/volunteers:
     get:
       parameters:
@@ -1973,80 +2258,118 @@ paths:
       summary: Get volunteers by event ID
       tags:
       - Volunteers
-  /api/events/{id}:
-    delete:
-      parameters:
-      - description: Event ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Delete an event
-      tags:
-      - Events
-    put:
+  /api/events/draft:
+    post:
       consumes:
       - application/json
+      description: Saves draft data for event creation. Creates a new draft if draftId
+        is not provided, or updates existing draft. Drafts are stored in a separate
+        event_drafts table and automatically deleted when event is submitted.
       parameters:
-      - description: Event ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Updated fields
+      - description: Draft payload
         in: body
-        name: event
+        name: draft
         required: true
         schema:
-          additionalProperties: true
           type: object
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Draft saved successfully" example({"draftId":1,"message":"Draft
+            saved successfully"})
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
         "400":
-          description: Bad Request
+          description: 'Bad Request" example({"error":"Invalid step name. Must be
+            one of: generalDetails, mediaPromotion, specialGuests, volunteers"})'
           schema:
             additionalProperties:
               type: string
             type: object
         "500":
-          description: Internal Server Error
+          description: Internal Server Error" example({"error":"Failed to save draft"})
           schema:
             additionalProperties:
               type: string
             type: object
       security:
       - ApiKeyAuth: []
-      summary: Update an event
+      summary: Save draft data for a specific step
+      tags:
+      - Events
+  /api/events/draft/{draftId}:
+    get:
+      description: Retrieves draft data for event creation. Returns all draft steps
+        (generalDetails, mediaPromotion, specialGuests, volunteers) stored in the
+        event_drafts table.
+      parameters:
+      - description: Draft ID
+        in: path
+        name: draftId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Draft data" example({"draftId":1,"generalDetails":{},"mediaPromotion":{},"specialGuests":{},"volunteers":{}})
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request" example({"error":"Invalid draft ID"})
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found" example({"error":"Draft not found"})
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error" example({"error":"Failed to retrieve
+            draft"})
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get draft data by draft ID
+      tags:
+      - Events
+  /api/events/draft/latest:
+    get:
+      description: Retrieves the most recent draft for the authenticated user. Used
+        to restore draft after logout/login.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Draft data" example({"draftId":1,"generalDetails":{},"mediaPromotion":{},"specialGuests":{},"volunteers":{}})
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found" example({"error":"No draft found for user"})
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error" example({"error":"Failed to retrieve
+            draft"})
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get latest draft for current user
       tags:
       - Events
   /api/events/search:

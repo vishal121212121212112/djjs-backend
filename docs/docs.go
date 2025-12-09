@@ -869,7 +869,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Branch"
+                            "$ref": "#/definitions/handlers.BranchCreateRequest"
                         }
                     }
                 ],
@@ -1965,6 +1965,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "description": "Get all events, optionally filtered by status (complete/incomplete)",
                 "produces": [
                     "application/json"
                 ],
@@ -1972,6 +1973,14 @@ const docTemplate = `{
                     "Events"
                 ],
                 "summary": "Get all events",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by status: complete or incomplete",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1999,6 +2008,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "description": "Creates a new event from frontend payload structure. Accepts generalDetails, mediaPromotion, involvedParticipants, donationTypes, materialTypes, specialGuests, volunteers, uploadedFiles, and optional draftId. If draftId is provided, the draft will be automatically deleted from event_drafts table after successful event creation.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2011,25 +2021,25 @@ const docTemplate = `{
                 "summary": "Create a new event",
                 "parameters": [
                     {
-                        "description": "Event payload",
+                        "description": "Frontend event payload",
                         "name": "event",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.EventDetails"
+                            "type": "object"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "Event created successfully\" example({\"message\":\"Event created successfully\",\"event\":{\"id\":1,\"event_type_id\":1,\"event_category_id\":1}})",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Bad Request\" example({\"error\":\"Invalid event data\"})",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -2038,7 +2048,171 @@ const docTemplate = `{
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal Server Error\" example({\"error\":\"Failed to create event\"})",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/events/draft": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Saves draft data for event creation. Creates a new draft if draftId is not provided, or updates existing draft. Drafts are stored in a separate event_drafts table and automatically deleted when event is submitted.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Save draft data for a specific step",
+                "parameters": [
+                    {
+                        "description": "Draft payload",
+                        "name": "draft",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Draft saved successfully\" example({\"draftId\":1,\"message\":\"Draft saved successfully\"})",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request\" example({\"error\":\"Invalid step name. Must be one of: generalDetails, mediaPromotion, specialGuests, volunteers\"})",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error\" example({\"error\":\"Failed to save draft\"})",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/events/draft/latest": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the most recent draft for the authenticated user. Used to restore draft after logout/login.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Get latest draft for current user",
+                "responses": {
+                    "200": {
+                        "description": "Draft data\" example({\"draftId\":1,\"generalDetails\":{},\"mediaPromotion\":{},\"specialGuests\":{},\"volunteers\":{}})",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found\" example({\"error\":\"No draft found for user\"})",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error\" example({\"error\":\"Failed to retrieve draft\"})",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/events/draft/{draftId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves draft data for event creation. Returns all draft steps (generalDetails, mediaPromotion, specialGuests, volunteers) stored in the event_drafts table.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Get draft data by draft ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Draft ID",
+                        "name": "draftId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Draft data\" example({\"draftId\":1,\"generalDetails\":{},\"mediaPromotion\":{},\"specialGuests\":{},\"volunteers\":{}})",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request\" example({\"error\":\"Invalid draft ID\"})",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found\" example({\"error\":\"Draft not found\"})",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error\" example({\"error\":\"Failed to retrieve draft\"})",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -2079,6 +2253,184 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/models.EventDetails"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/events/{event_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a single event by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Get event by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Event ID",
+                        "name": "event_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.EventDetails"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Updates an event. Accepts both flat structure (for simple updates) and nested frontend payload structure (for full updates with related data)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Update an event",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Event ID",
+                        "name": "event_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated fields (can be flat or nested frontend payload)",
+                        "name": "event",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Delete an event",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Event ID",
+                        "name": "event_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     },
@@ -2149,6 +2501,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/events/{event_id}/download": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Downloads event data in a downloadable format (JSON for now, PDF can be added later)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Download event data as PDF/JSON",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Event ID",
+                        "name": "event_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Event data file",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/events/{event_id}/specialguests": {
             "get": {
                 "security": [
@@ -2190,6 +2603,80 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/events/{event_id}/status": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update the status of an event (complete or incomplete)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Update event status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Event ID",
+                        "name": "event_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status update",
+                        "name": "status",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status updated successfully\" example({\"message\":\"Event status updated successfully\",\"status\":\"complete\"})",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request\" example({\"error\":\"Invalid status. Must be 'complete' or 'incomplete'\"})",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found\" example({\"error\":\"Event not found\"})",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error\" example({\"error\":\"Failed to update event status\"})",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -2244,125 +2731,6 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/events/{id}": {
-            "put": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Events"
-                ],
-                "summary": "Update an event",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Event ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Updated fields",
-                        "name": "event",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Events"
-                ],
-                "summary": "Delete an event",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Event ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -3628,6 +3996,84 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handlers.BranchCreateRequest": {
+            "type": "object",
+            "required": [
+                "contact_number",
+                "name"
+            ],
+            "properties": {
+                "aashram_area": {
+                    "type": "number"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "description": "Can be string or number"
+                },
+                "city_id": {
+                    "type": "integer"
+                },
+                "contact_number": {
+                    "type": "string"
+                },
+                "coordinator_name": {
+                    "type": "string"
+                },
+                "country": {
+                    "description": "Support both old format (strings) and new format (integers)"
+                },
+                "country_id": {
+                    "type": "integer"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "daily_end_time": {
+                    "type": "string"
+                },
+                "daily_start_time": {
+                    "type": "string"
+                },
+                "district": {
+                    "description": "Can be string or number"
+                },
+                "district_id": {
+                    "type": "integer"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "established_on": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "open_days": {
+                    "type": "string"
+                },
+                "pincode": {
+                    "type": "string"
+                },
+                "police_station": {
+                    "type": "string"
+                },
+                "post_office": {
+                    "type": "string"
+                },
+                "state": {
+                    "description": "Can be string or number"
+                },
+                "state_id": {
+                    "type": "integer"
+                },
+                "updated_by": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.LoginRequest": {
             "type": "object",
             "required": [
@@ -3699,8 +4145,11 @@ const docTemplate = `{
                     "maxLength": 500
                 },
                 "city": {
-                    "type": "string",
-                    "maxLength": 100
+                    "$ref": "#/definitions/models.City"
+                },
+                "city_id": {
+                    "type": "integer",
+                    "minimum": 1
                 },
                 "contact_number": {
                     "type": "string",
@@ -3712,8 +4161,11 @@ const docTemplate = `{
                     "minLength": 2
                 },
                 "country": {
-                    "type": "string",
-                    "maxLength": 100
+                    "$ref": "#/definitions/models.Country"
+                },
+                "country_id": {
+                    "type": "integer",
+                    "minimum": 1
                 },
                 "created_by": {
                     "type": "string"
@@ -3728,8 +4180,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "district": {
-                    "type": "string",
-                    "maxLength": 100
+                    "$ref": "#/definitions/models.District"
+                },
+                "district_id": {
+                    "type": "integer",
+                    "minimum": 1
                 },
                 "email": {
                     "type": "string",
@@ -3762,8 +4217,11 @@ const docTemplate = `{
                     "maxLength": 100
                 },
                 "state": {
-                    "type": "string",
-                    "maxLength": 100
+                    "$ref": "#/definitions/models.State"
+                },
+                "state_id": {
+                    "type": "integer",
+                    "minimum": 1
                 },
                 "updated_by": {
                     "type": "string"
@@ -4024,10 +4482,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "daily_end_time": {
-                    "type": "string"
+                    "$ref": "#/definitions/models.TimeOnly"
                 },
                 "daily_start_time": {
-                    "type": "string"
+                    "$ref": "#/definitions/models.TimeOnly"
                 },
                 "district": {
                     "type": "string"
@@ -4075,6 +4533,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "state": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 },
                 "theme": {
@@ -4350,6 +4811,14 @@ const docTemplate = `{
                 }
             }
         },
+        "models.TimeOnly": {
+            "type": "object",
+            "properties": {
+                "time.Time": {
+                    "type": "string"
+                }
+            }
+        },
         "models.User": {
             "type": "object",
             "required": [
@@ -4484,7 +4953,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "eventsreportingapi.djjs.org",
+	Host:             "localhost:8080",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "DJJS Event Reporting API",

@@ -75,7 +75,6 @@ func GetAllEventMediaHandler(c *gin.Context) {
 // @Param event_id path int true "Event ID"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
 // @Router /api/event-media/event/{event_id} [get]
 func GetEventMediaByEventIDHandler(c *gin.Context) {
 	eventIDParam := c.Param("event_id")
@@ -86,9 +85,9 @@ func GetEventMediaByEventIDHandler(c *gin.Context) {
 	}
 
 	mediaList, err := services.GetEventMediaByEventID(uint(eventID))
+	// Return empty array if no media found (not an error)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return
+		mediaList = []models.EventMedia{}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
