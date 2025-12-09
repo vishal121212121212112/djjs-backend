@@ -136,5 +136,13 @@ func ValidateEventUpdateFields(updateData map[string]interface{}) error {
 		}
 	}
 
+	// Validate status if present
+	if status, ok := updateData["status"]; ok {
+		statusStr := strings.TrimSpace(status.(string))
+		if statusStr != "" && statusStr != "complete" && statusStr != "incomplete" {
+			return errors.New("status must be either 'complete' or 'incomplete'")
+		}
+	}
+
 	return nil
 }
