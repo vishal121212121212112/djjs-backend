@@ -25,7 +25,7 @@ func LoadJWTSecret() {
 var DB *gorm.DB
 
 func ConnectDB() {
-    dbUser := os.Getenv("POSTGRES_USER")
+    dbUser := os.Getenv("POSTGRES_USER") 
     dbPass := os.Getenv("POSTGRES_PASSWORD")
     dbName := os.Getenv("POSTGRES_DB")
     dbPort := os.Getenv("PG_PORT")
