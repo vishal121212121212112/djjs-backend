@@ -25,11 +25,14 @@ RUN apk add --no-cache ca-certificates
 # Copy compiled binary
 COPY --from=builder /app/main .
 
-# Copy .env from host → container
-COPY .env .env
-
 # Copy docs directory for Swagger
 COPY --from=builder /app/docs ./docs
+
+# Note: Environment variables should be provided at runtime via:
+# - docker run -e VAR=value
+# - docker-compose environment section
+# - Kubernetes secrets/configmaps
+# The application will use environment variables directly
 
 # Create a non-root user
 RUN adduser -D appuser
