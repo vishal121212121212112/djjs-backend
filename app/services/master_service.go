@@ -148,3 +148,39 @@ func GetOratorDropdownService() ([]models.BranchMember, error) {
 
 	return list, nil
 }
+
+// GetAllLanguagesService returns all languages
+func GetAllLanguagesService() ([]models.Language, error) {
+	var languages []models.Language
+	if err := config.DB.Order("name ASC").Find(&languages).Error; err != nil {
+		return nil, err
+	}
+	return languages, nil
+}
+
+// GetAllSevaTypesService returns all seva types
+func GetAllSevaTypesService() ([]models.SevaType, error) {
+	var sevaTypes []models.SevaType
+	if err := config.DB.Order("name ASC").Find(&sevaTypes).Error; err != nil {
+		return nil, err
+	}
+	return sevaTypes, nil
+}
+
+// GetAllEventSubCategoriesService returns all event sub categories
+func GetAllEventSubCategoriesService() ([]models.EventSubCategory, error) {
+	var subCategories []models.EventSubCategory
+	if err := config.DB.Preload("EventCategory").Preload("EventCategory.EventType").Order("name ASC").Find(&subCategories).Error; err != nil {
+		return nil, err
+	}
+	return subCategories, nil
+}
+
+// GetEventSubCategoriesByCategoryService returns event sub categories filtered by category ID
+func GetEventSubCategoriesByCategoryService(categoryID uint) ([]models.EventSubCategory, error) {
+	var subCategories []models.EventSubCategory
+	if err := config.DB.Where("event_category_id = ?", categoryID).Preload("EventCategory").Preload("EventCategory.EventType").Order("name ASC").Find(&subCategories).Error; err != nil {
+		return nil, err
+	}
+	return subCategories, nil
+}

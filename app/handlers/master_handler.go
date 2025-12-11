@@ -282,3 +282,96 @@ func GetOratorDropdownHandler(c *gin.Context) {
 
 	c.JSON(200, list)
 }
+
+// --------------------- Languages ---------------------
+
+// GetAllLanguagesHandler godoc
+// @Summary Get all languages
+// @Description Returns a list of all languages
+// @Tags Languages
+// @Security ApiKeyAuth
+// @Produce json
+// @Success 200 {array} models.Language
+// @Failure 500 {object} map[string]string
+// @Router /api/languages [get]
+func GetAllLanguagesHandler(c *gin.Context) {
+	languages, err := services.GetAllLanguagesService()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, languages)
+}
+
+// --------------------- Seva Types ---------------------
+
+// GetAllSevaTypesHandler godoc
+// @Summary Get all seva types
+// @Description Returns a list of all seva types
+// @Tags SevaTypes
+// @Security ApiKeyAuth
+// @Produce json
+// @Success 200 {array} models.SevaType
+// @Failure 500 {object} map[string]string
+// @Router /api/seva-types [get]
+func GetAllSevaTypesHandler(c *gin.Context) {
+	sevaTypes, err := services.GetAllSevaTypesService()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, sevaTypes)
+}
+
+// --------------------- Event Sub Categories ---------------------
+
+// GetAllEventSubCategoriesHandler godoc
+// @Summary Get all event sub categories
+// @Description Returns a list of all event sub categories
+// @Tags EventSubCategories
+// @Security ApiKeyAuth
+// @Produce json
+// @Success 200 {array} models.EventSubCategory
+// @Failure 500 {object} map[string]string
+// @Router /api/event-sub-categories [get]
+func GetAllEventSubCategoriesHandler(c *gin.Context) {
+	subCategories, err := services.GetAllEventSubCategoriesService()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, subCategories)
+}
+
+// GetEventSubCategoriesByCategoryHandler godoc
+// @Summary Get event sub categories by category ID
+// @Description Returns event sub categories filtered by a specific category ID
+// @Tags EventSubCategories
+// @Security ApiKeyAuth
+// @Produce json
+// @Param category_id query int true "Event Category ID"
+// @Success 200 {array} models.EventSubCategory
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/event-sub-categories/by-category [get]
+func GetEventSubCategoriesByCategoryHandler(c *gin.Context) {
+	categoryIDStr := c.Query("category_id")
+	if categoryIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "category_id query parameter is required"})
+		return
+	}
+
+	categoryID, err := strconv.ParseUint(categoryIDStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category_id"})
+		return
+	}
+
+	subCategories, err := services.GetEventSubCategoriesByCategoryService(uint(categoryID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, subCategories)
+}

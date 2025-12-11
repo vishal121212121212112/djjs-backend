@@ -9,6 +9,7 @@ type Volunteer struct {
 	BranchID      uint       `gorm:"not null" json:"branch_id" validate:"required,min=1"`
 	Branch        Branch     `gorm:"foreignKey:BranchID" json:"branch,omitempty"`
 	VolunteerName string     `gorm:"not null" json:"volunteer_name" validate:"required,min=2,max=255"`
+	Contact       string     `gorm:"column:contact" json:"contact,omitempty" validate:"omitempty,max=20"`
 	NumberOfDays  int        `gorm:"column:number_of_days" json:"number_of_days,omitempty" validate:"omitempty,min=0,max=365"`
 	SevaInvolved  string     `json:"seva_involved,omitempty" validate:"omitempty,min=2,max=500"`
 	MentionSeva   string     `gorm:"column:mention_seva" json:"mention_seva,omitempty" validate:"omitempty,min=2,max=500"`

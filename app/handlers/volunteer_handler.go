@@ -171,6 +171,7 @@ func DeleteVolunteerHandler(c *gin.Context) {
 func sanitizeVolunteerUpdates(payload map[string]interface{}) map[string]interface{} {
 	allowed := map[string]struct{}{
 		"volunteer_name": {},
+		"contact":        {},
 		"number_of_days": {},
 		"seva_involved":  {},
 		"mention_seva":   {},

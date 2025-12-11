@@ -24,6 +24,7 @@ import (
 
 	"github.com/followCode/djjs-event-reporting-backend/app/handlers"
 	"github.com/followCode/djjs-event-reporting-backend/app/middleware"
+	"github.com/followCode/djjs-event-reporting-backend/app/services"
 	"github.com/followCode/djjs-event-reporting-backend/config"
 	"github.com/gin-contrib/cors"
 	"github.com/joho/godotenv"
@@ -50,6 +51,13 @@ func main() {
 		log.Fatal("JWT_SECRET is missing in .env")
 	}
 	config.JWTSecret = []byte(jwtSecret)
+
+	// 3️⃣ Initialize S3
+	if err := services.InitializeS3(); err != nil {
+		log.Printf("Warning: Failed to initialize S3: %v", err)
+	} else {
+		log.Println("S3 initialized successfully")
+	}
 
 	// 3️⃣ Create Gin router
 	r := gin.Default()
@@ -186,6 +194,16 @@ func main() {
 		api.GET("/promotion-material-types", middleware.AuthMiddleware(), handlers.GetAllPromotionMaterialTypesHandler)
 		api.GET("/coordinators", middleware.AuthMiddleware(), handlers.GetCoordinatorDropdownHandler)
 		api.GET("/orators", middleware.AuthMiddleware(), handlers.GetOratorDropdownHandler)
+		api.GET("/languages", middleware.AuthMiddleware(), handlers.GetAllLanguagesHandler)
+		api.GET("/seva-types", middleware.AuthMiddleware(), handlers.GetAllSevaTypesHandler)
+		api.GET("/event-sub-categories", middleware.AuthMiddleware(), handlers.GetAllEventSubCategoriesHandler)
+		api.GET("/event-sub-categories/by-category", middleware.AuthMiddleware(), handlers.GetEventSubCategoriesByCategoryHandler)
+
+		// File Upload/Download APIs
+		api.POST("/files/upload", middleware.AuthMiddleware(), handlers.UploadFileHandler)
+		api.POST("/files/upload-multiple", middleware.AuthMiddleware(), handlers.UploadMultipleFilesHandler)
+		api.GET("/files/:media_id/download", middleware.AuthMiddleware(), handlers.DownloadFileHandler)
+		api.DELETE("/files/:media_id", middleware.AuthMiddleware(), handlers.DeleteFileHandler)
 
 	}
 

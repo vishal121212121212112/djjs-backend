@@ -30,6 +30,8 @@ type EventMedia struct {
 	Designation         string            `json:"designation,omitempty"`
 	Contact             string            `json:"contact,omitempty"`
 	Email               string            `json:"email,omitempty"`
+	FileURL             string            `json:"file_url,omitempty" gorm:"column:file_url"`
+	FileType            string            `json:"file_type,omitempty" gorm:"column:file_type"` // image, video, audio, file
 	CreatedOn           time.Time         `gorm:"autoCreateTime" json:"created_on"`
 	UpdatedOn           time.Time         `gorm:"autoUpdateTime" json:"updated_on"`
 	CreatedBy           string            `json:"created_by,omitempty" gorm:"<-:create"` // only set on create

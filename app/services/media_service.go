@@ -91,6 +91,12 @@ func UpdateEventMedia(media *models.EventMedia) error {
 	if media.MediaCoverageTypeID != 0 {
 		updates["media_coverage_type_id"] = media.MediaCoverageTypeID
 	}
+	if media.FileURL != "" {
+		updates["file_url"] = media.FileURL
+	}
+	if media.FileType != "" {
+		updates["file_type"] = media.FileType
+	}
 	if media.UpdatedBy != "" {
 		updates["updated_by"] = media.UpdatedBy
 	}

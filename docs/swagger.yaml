@@ -1,16 +1,3 @@
-swagger: "2.0"
-info:
-  description: API documentation for the DJJS Event Reporting Backend.
-  title: DJJS Event Reporting API
-  termsOfService: http://swagger.io/terms/
-  contact:
-    name: API Support
-    email: vaish@gmail.com
-  license:
-    name: MIT
-    url: https://opensource.org/licenses/MIT
-  version: "1.0"
-host: localhost:8080
 basePath: /
 definitions:
   handlers.BranchCreateRequest:
@@ -369,6 +356,10 @@ definitions:
         type: integer
       name:
         type: string
+      sub_categories:
+        items:
+          $ref: '#/definitions/models.EventSubCategory'
+        type: array
     type: object
   models.EventDetails:
     properties:
@@ -456,6 +447,11 @@ definitions:
         $ref: '#/definitions/models.Event'
       event_id:
         type: integer
+      file_type:
+        description: image, video, audio, file
+        type: string
+      file_url:
+        type: string
       first_name:
         type: string
       gender:
@@ -477,11 +473,41 @@ definitions:
       updated_on:
         type: string
     type: object
+  models.EventSubCategory:
+    properties:
+      created_on:
+        type: string
+      description:
+        type: string
+      event_category:
+        $ref: '#/definitions/models.EventCategory'
+      event_category_id:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      updated_on:
+        type: string
+    type: object
   models.EventType:
     properties:
       id:
         type: integer
       name:
+        type: string
+    type: object
+  models.Language:
+    properties:
+      code:
+        type: string
+      created_on:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_on:
         type: string
     type: object
   models.MediaCoverageType:
@@ -535,6 +561,19 @@ definitions:
         type: string
     type: object
   models.Role:
+    properties:
+      created_on:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_on:
+        type: string
+    type: object
+  models.SevaType:
     properties:
       created_on:
         type: string
@@ -660,6 +699,9 @@ definitions:
       branch_id:
         minimum: 1
         type: integer
+      contact:
+        maxLength: 20
+        type: string
       created_by:
         type: string
       created_on:
@@ -696,6 +738,18 @@ definitions:
     - event_id
     - volunteer_name
     type: object
+host: localhost:8080
+info:
+  contact:
+    email: vaish@gmail.com
+    name: API Support
+  description: API documentation for the DJJS Event Reporting Backend.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: DJJS Event Reporting API
+  version: "1.0"
 paths:
   /api/areas:
     get:
@@ -1897,6 +1951,64 @@ paths:
       summary: Get Event Media by Event ID
       tags:
       - EventMedia
+  /api/event-sub-categories:
+    get:
+      description: Returns a list of all event sub categories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.EventSubCategory'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all event sub categories
+      tags:
+      - EventSubCategories
+  /api/event-sub-categories/by-category:
+    get:
+      description: Returns event sub categories filtered by a specific category ID
+      parameters:
+      - description: Event Category ID
+        in: query
+        name: category_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.EventSubCategory'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get event sub categories by category ID
+      tags:
+      - EventSubCategories
   /api/event-types:
     get:
       description: Returns a list of all Event Types
@@ -2440,6 +2552,205 @@ paths:
       summary: Search events
       tags:
       - Events
+  /api/files/{media_id}:
+    delete:
+      description: Deletes a file from S3 and optionally the media record. Optionally
+        validates event_id to ensure file belongs to specific event.
+      parameters:
+      - description: Media ID
+        in: path
+        name: media_id
+        required: true
+        type: integer
+      - description: Event ID (optional, for validation)
+        in: query
+        name: event_id
+        type: integer
+      - description: 'Delete media record from database (default: true)'
+        in: query
+        name: delete_record
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete file from S3
+      tags:
+      - Files
+  /api/files/{media_id}/download:
+    get:
+      description: Generates a presigned URL for downloading a file from S3
+      parameters:
+      - description: Media ID
+        in: path
+        name: media_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get download URL for file
+      tags:
+      - Files
+  /api/files/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload image, video, audio, or PDF file to S3 and associate with
+        event media
+      parameters:
+      - description: File to upload (image, video, audio, or PDF)
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Event ID
+        in: formData
+        name: event_id
+        required: true
+        type: integer
+      - description: Media ID (if updating existing media)
+        in: formData
+        name: media_id
+        type: integer
+      - description: File category (Event Photos, Video Coverage, Testimonials, Press
+          Release)
+        in: formData
+        name: category
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Upload file to S3
+      tags:
+      - Files
+  /api/files/upload-multiple:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload multiple image, video, audio, or PDF files to S3 and associate
+        with event media
+      parameters:
+      - description: Files to upload (multiple files allowed)
+        in: formData
+        name: files
+        required: true
+        type: file
+      - description: Event ID
+        in: formData
+        name: event_id
+        required: true
+        type: integer
+      - description: File category (Event Photos, Video Coverage, Testimonials, Press
+          Release)
+        in: formData
+        name: category
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Upload multiple files to S3
+      tags:
+      - Files
+  /api/languages:
+    get:
+      description: Returns a list of all languages
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Language'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all languages
+      tags:
+      - Languages
   /api/orators:
     get:
       description: Returns a list of orators (Coordinators & Preachers) with id and
@@ -2650,6 +2961,29 @@ paths:
       summary: Get all Promotion Material Types
       tags:
       - PromotionMaterialTypes
+  /api/seva-types:
+    get:
+      description: Returns a list of all seva types
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.SevaType'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all seva types
+      tags:
+      - SevaTypes
   /api/specialguests:
     get:
       produces:
@@ -3269,3 +3603,4 @@ securityDefinitions:
     in: header
     name: Authorization
     type: apiKey
+swagger: "2.0"

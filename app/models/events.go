@@ -116,10 +116,21 @@ type EventType struct {
 }
 
 type EventCategory struct {
-	ID          uint      `gorm:"primaryKey;autoIncrement" json:"id"`
-	Name        string    `json:"name"`
-	EventTypeID uint      `json:"event_type_id"`
-	EventType   EventType `gorm:"foreignKey:EventTypeID" json:"event_type,omitempty"`
+	ID              uint                `gorm:"primaryKey;autoIncrement" json:"id"`
+	Name            string              `json:"name"`
+	EventTypeID     uint                `json:"event_type_id"`
+	EventType       EventType           `gorm:"foreignKey:EventTypeID" json:"event_type,omitempty"`
+	SubCategories   []EventSubCategory  `gorm:"foreignKey:EventCategoryID" json:"sub_categories,omitempty"`
+}
+
+type EventSubCategory struct {
+	ID              uint          `gorm:"primaryKey;autoIncrement" json:"id"`
+	Name            string        `json:"name"`
+	EventCategoryID uint          `json:"event_category_id"`
+	EventCategory   EventCategory `gorm:"foreignKey:EventCategoryID" json:"event_category,omitempty"`
+	Description     string        `json:"description,omitempty"`
+	CreatedOn       time.Time     `gorm:"autoCreateTime" json:"created_on,omitempty"`
+	UpdatedOn       *time.Time    `gorm:"autoUpdateTime" json:"updated_on,omitempty"`
 }
 
 type EventDetails struct {

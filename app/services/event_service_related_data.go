@@ -19,8 +19,8 @@ func CreateEventRelatedData(eventID uint, payload struct {
 	SpecialGuests        []interface{}          `json:"specialGuests"`
 	Volunteers           []interface{}          `json:"volunteers"`
 	UploadedFiles        map[string]interface{} `json:"uploadedFiles"`
-	DraftID              *uint                 `json:"draftId,omitempty"`
-	Status               string                `json:"status,omitempty"`
+	DraftID              *uint                  `json:"draftId,omitempty"`
+	Status               string                 `json:"status,omitempty"`
 }) error {
 	// Create Event Media records
 	// Check both "eventMediaList" (from frontend) and "eventMedia" (legacy)
@@ -251,6 +251,9 @@ func CreateEventRelatedData(eventID uint, payload struct {
 			if val, ok := volMap["name"].(string); ok {
 				volunteer.VolunteerName = val
 			}
+			if val, ok := volMap["contact"].(string); ok {
+				volunteer.Contact = val
+			}
 			if val, ok := volMap["days"].(float64); ok {
 				volunteer.NumberOfDays = int(val)
 			}
@@ -315,6 +318,12 @@ func CreateEventRelatedData(eventID uint, payload struct {
 			}
 		}
 	}
+
+	// Process uploaded files from frontend
+	// Note: Files are uploaded to S3 via separate API call after event creation
+	// This section can be used to create EventMedia records for files uploaded during event creation
+	// The uploadedFiles map contains file references that will be processed by the frontend
+	// after event creation, or we can process them here if needed
 
 	return nil
 }
