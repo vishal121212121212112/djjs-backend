@@ -2,7 +2,7 @@
 
 This is a Go backend application for event reporting. It includes a **login/logout API** with JWT authentication and role-based access. The backend connects to a **Postgres database** (running via Docker) and uses **GORM** for ORM.
 
-Other APIs will be added later. 
+Other APIs will be added later.
 
 ---
 
@@ -33,7 +33,7 @@ go mod tidy
 
 ## **Run the Backend**
 
-go run main.go
+go run app/main/main.go
 
 ## **Access the APIs**
 
@@ -47,7 +47,7 @@ Swagger JSON (raw): http://localhost:8080/swagger/doc.json
 
 If you make changes to your routes or handlers, regenerate Swagger docs using the following command:
 
-swag init -g main.go -o docs
+swag init -g app/main/main.go -o docs
 
 ## **Test the APIs**
 

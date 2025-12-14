@@ -554,6 +554,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "description": "Retrieve all branch members across all branches with their branch information",
                 "produces": [
                     "application/json"
                 ],
@@ -588,6 +589,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "description": "Create a new member for a branch. Supports date_of_birth and date_of_samarpan in format \"YYYY-MM-DD\" or RFC3339",
                 "consumes": [
                     "application/json"
                 ],
@@ -605,7 +607,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.BranchMember"
+                            "$ref": "#/definitions/handlers.BranchMemberCreateRequest"
                         }
                     }
                 ],
@@ -645,6 +647,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "description": "Retrieve all members associated with a specific branch",
                 "produces": [
                     "application/json"
                 ],
@@ -699,6 +702,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "description": "Update branch member details. Date fields (date_of_birth, date_of_samarpan) accept \"YYYY-MM-DD\" or RFC3339 format",
                 "consumes": [
                     "application/json"
                 ],
@@ -764,6 +768,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "description": "Delete a branch member by ID",
                 "produces": [
                     "application/json"
                 ],
@@ -818,6 +823,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "description": "Retrieve all branches with their related data (country, state, district, city, infrastructure, members)",
                 "produces": [
                     "application/json"
                 ],
@@ -852,6 +858,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "description": "Create a new branch with optional infrastructure, child branches, and member associations",
                 "consumes": [
                     "application/json"
                 ],
@@ -892,6 +899,61 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/branches/parent/{parent_id}/children": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve all child branches of a specific parent branch",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branches"
+                ],
+                "summary": "Get child branches by parent branch ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Parent Branch ID",
+                        "name": "parent_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Branch"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -960,6 +1022,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "description": "Retrieve a specific branch by its ID with all related data",
                 "produces": [
                     "application/json"
                 ],
@@ -980,8 +1043,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/models.Branch"
                         }
                     },
                     "400": {
@@ -1010,6 +1072,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "description": "Update branch details, infrastructure, child branches, and member associations",
                 "consumes": [
                     "application/json"
                 ],
@@ -1043,10 +1106,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/models.Branch"
                         }
                     },
                     "400": {
@@ -1075,6 +1135,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "description": "Delete a branch by ID. This will also delete associated infrastructure and members",
                 "produces": [
                     "application/json"
                 ],
@@ -1112,6 +1173,451 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/child-branches": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve all child branches with their details",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Child Branches"
+                ],
+                "summary": "Get all child branches",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ChildBranch"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new child branch with all its details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Child Branches"
+                ],
+                "summary": "Create a new child branch",
+                "parameters": [
+                    {
+                        "description": "Child Branch Data",
+                        "name": "childBranch",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ChildBranch"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.ChildBranch"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/child-branches/parent/{parent_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve all child branches of a specific parent branch",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Child Branches"
+                ],
+                "summary": "Get child branches by parent branch ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Parent Branch ID",
+                        "name": "parent_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ChildBranch"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/child-branches/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a specific child branch by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Child Branches"
+                ],
+                "summary": "Get a child branch by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Child Branch ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ChildBranch"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update an existing child branch",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Child Branches"
+                ],
+                "summary": "Update a child branch",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Child Branch ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Data",
+                        "name": "childBranch",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ChildBranch"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a child branch by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Child Branches"
+                ],
+                "summary": "Delete a child branch",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Child Branch ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/child-branches/{id}/infrastructure": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get all infrastructure records for a child branch",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Child Branch Infrastructure"
+                ],
+                "summary": "Get child branch infrastructure",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Child Branch ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ChildBranchInfrastructure"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create infrastructure record for a child branch",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Child Branch Infrastructure"
+                ],
+                "summary": "Create child branch infrastructure",
+                "parameters": [
+                    {
+                        "description": "Infrastructure Data",
+                        "name": "infrastructure",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ChildBranchInfrastructure"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.ChildBranchInfrastructure"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/child-branches/{id}/members": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get all members of a child branch",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Child Branch Members"
+                ],
+                "summary": "Get child branch members",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Child Branch ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ChildBranchMember"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a member record for a child branch",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Child Branch Members"
+                ],
+                "summary": "Create child branch member",
+                "parameters": [
+                    {
+                        "description": "Member Data",
+                        "name": "member",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ChildBranchMember"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.ChildBranchMember"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -4469,6 +4975,9 @@ const docTemplate = `{
                 "address": {
                     "type": "string"
                 },
+                "branch_code": {
+                    "type": "string"
+                },
                 "branch_members": {
                     "type": "array",
                     "items": {
@@ -4529,6 +5038,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "ncr": {
+                    "type": "boolean"
+                },
                 "open_days": {
                     "type": "string"
                 },
@@ -4542,13 +5054,56 @@ const docTemplate = `{
                 "post_office": {
                     "type": "string"
                 },
+                "region_id": {
+                    "type": "integer"
+                },
                 "state": {
                     "description": "Can be string or number"
                 },
                 "state_id": {
                     "type": "integer"
                 },
+                "status": {
+                    "type": "boolean"
+                },
                 "updated_by": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.BranchMemberCreateRequest": {
+            "type": "object",
+            "required": [
+                "branch_id",
+                "member_type",
+                "name"
+            ],
+            "properties": {
+                "age": {
+                    "type": "integer"
+                },
+                "branch_id": {
+                    "type": "integer"
+                },
+                "branch_role": {
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "date_of_samarpan": {
+                    "type": "string"
+                },
+                "member_type": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "qualification": {
+                    "type": "string"
+                },
+                "responsibility": {
                     "type": "string"
                 }
             }
@@ -4643,10 +5198,20 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 500
                 },
+                "branch_code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
                 "branch_members": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.BranchMember"
+                    }
+                },
+                "child_branches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ChildBranch"
                     }
                 },
                 "children": {
@@ -4718,6 +5283,9 @@ const docTemplate = `{
                     "maxLength": 255,
                     "minLength": 2
                 },
+                "ncr": {
+                    "type": "boolean"
+                },
                 "open_days": {
                     "type": "string",
                     "maxLength": 100
@@ -4739,12 +5307,18 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 100
                 },
+                "region_id": {
+                    "type": "integer"
+                },
                 "state": {
                     "$ref": "#/definitions/models.State"
                 },
                 "state_id": {
                     "type": "integer",
                     "minimum": 1
+                },
+                "status": {
+                    "type": "boolean"
                 },
                 "updated_by": {
                     "type": "string"
@@ -4818,6 +5392,247 @@ const docTemplate = `{
                 "branch_role": {
                     "type": "string",
                     "maxLength": 100
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "created_on": {
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "date_of_samarpan": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "member_type": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 2
+                },
+                "qualification": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "responsibility": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "updated_by": {
+                    "type": "string"
+                },
+                "updated_on": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ChildBranch": {
+            "type": "object",
+            "required": [
+                "contact_number",
+                "name",
+                "parent_branch_id"
+            ],
+            "properties": {
+                "aashram_area": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "address": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "branch_code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "city": {
+                    "$ref": "#/definitions/models.City"
+                },
+                "city_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "contact_number": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "coordinator_name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 2
+                },
+                "country": {
+                    "$ref": "#/definitions/models.Country"
+                },
+                "country_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "created_on": {
+                    "type": "string"
+                },
+                "daily_end_time": {
+                    "type": "string"
+                },
+                "daily_start_time": {
+                    "type": "string"
+                },
+                "district": {
+                    "$ref": "#/definitions/models.District"
+                },
+                "district_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "email": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "established_on": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "infrastructure": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ChildBranchInfrastructure"
+                    }
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ChildBranchMember"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 2
+                },
+                "ncr": {
+                    "type": "boolean"
+                },
+                "open_days": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "parent_branch": {
+                    "$ref": "#/definitions/models.Branch"
+                },
+                "parent_branch_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "pincode": {
+                    "type": "string"
+                },
+                "police_station": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "post_office": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "region_id": {
+                    "type": "integer"
+                },
+                "state": {
+                    "$ref": "#/definitions/models.State"
+                },
+                "state_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "status": {
+                    "type": "boolean"
+                },
+                "updated_by": {
+                    "type": "string"
+                },
+                "updated_on": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ChildBranchInfrastructure": {
+            "type": "object",
+            "required": [
+                "child_branch_id",
+                "count",
+                "type"
+            ],
+            "properties": {
+                "child_branch": {
+                    "$ref": "#/definitions/models.ChildBranch"
+                },
+                "child_branch_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "count": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "created_on": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "updated_by": {
+                    "type": "string"
+                },
+                "updated_on": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ChildBranchMember": {
+            "type": "object",
+            "required": [
+                "child_branch_id",
+                "member_type",
+                "name"
+            ],
+            "properties": {
+                "age": {
+                    "type": "integer",
+                    "maximum": 150,
+                    "minimum": 0
+                },
+                "branch_role": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "child_branch": {
+                    "$ref": "#/definitions/models.ChildBranch"
+                },
+                "child_branch_id": {
+                    "type": "integer",
+                    "minimum": 1
                 },
                 "created_by": {
                     "type": "string"

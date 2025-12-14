@@ -6,6 +6,8 @@ definitions:
         type: number
       address:
         type: string
+      branch_code:
+        type: string
       branch_members:
         items:
           type: integer
@@ -46,6 +48,8 @@ definitions:
         type: array
       name:
         type: string
+      ncr:
+        type: boolean
       open_days:
         type: string
       parent_branch_id: {}
@@ -55,14 +59,43 @@ definitions:
         type: string
       post_office:
         type: string
+      region_id:
+        type: integer
       state:
         description: Can be string or number
       state_id:
         type: integer
+      status:
+        type: boolean
       updated_by:
         type: string
     required:
     - contact_number
+    - name
+    type: object
+  handlers.BranchMemberCreateRequest:
+    properties:
+      age:
+        type: integer
+      branch_id:
+        type: integer
+      branch_role:
+        type: string
+      date_of_birth:
+        type: string
+      date_of_samarpan:
+        type: string
+      member_type:
+        type: string
+      name:
+        type: string
+      qualification:
+        type: string
+      responsibility:
+        type: string
+    required:
+    - branch_id
+    - member_type
     - name
     type: object
   handlers.ChildBranchEntry:
@@ -125,9 +158,16 @@ definitions:
       address:
         maxLength: 500
         type: string
+      branch_code:
+        maxLength: 50
+        type: string
       branch_members:
         items:
           $ref: '#/definitions/models.BranchMember'
+        type: array
+      child_branches:
+        items:
+          $ref: '#/definitions/models.ChildBranch'
         type: array
       children:
         items:
@@ -178,6 +218,8 @@ definitions:
         maxLength: 255
         minLength: 2
         type: string
+      ncr:
+        type: boolean
       open_days:
         maxLength: 100
         type: string
@@ -193,11 +235,15 @@ definitions:
       post_office:
         maxLength: 100
         type: string
+      region_id:
+        type: integer
       state:
         $ref: '#/definitions/models.State'
       state_id:
         minimum: 1
         type: integer
+      status:
+        type: boolean
       updated_by:
         type: string
       updated_on:
@@ -279,6 +325,178 @@ definitions:
         type: string
     required:
     - branch_id
+    - member_type
+    - name
+    type: object
+  models.ChildBranch:
+    properties:
+      aashram_area:
+        minimum: 0
+        type: number
+      address:
+        maxLength: 500
+        type: string
+      branch_code:
+        maxLength: 50
+        type: string
+      city:
+        $ref: '#/definitions/models.City'
+      city_id:
+        minimum: 1
+        type: integer
+      contact_number:
+        maxLength: 20
+        type: string
+      coordinator_name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      country:
+        $ref: '#/definitions/models.Country'
+      country_id:
+        minimum: 1
+        type: integer
+      created_by:
+        type: string
+      created_on:
+        type: string
+      daily_end_time:
+        type: string
+      daily_start_time:
+        type: string
+      district:
+        $ref: '#/definitions/models.District'
+      district_id:
+        minimum: 1
+        type: integer
+      email:
+        maxLength: 255
+        type: string
+      established_on:
+        type: string
+      id:
+        type: integer
+      infrastructure:
+        items:
+          $ref: '#/definitions/models.ChildBranchInfrastructure'
+        type: array
+      members:
+        items:
+          $ref: '#/definitions/models.ChildBranchMember'
+        type: array
+      name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      ncr:
+        type: boolean
+      open_days:
+        maxLength: 100
+        type: string
+      parent_branch:
+        $ref: '#/definitions/models.Branch'
+      parent_branch_id:
+        minimum: 1
+        type: integer
+      pincode:
+        type: string
+      police_station:
+        maxLength: 100
+        type: string
+      post_office:
+        maxLength: 100
+        type: string
+      region_id:
+        type: integer
+      state:
+        $ref: '#/definitions/models.State'
+      state_id:
+        minimum: 1
+        type: integer
+      status:
+        type: boolean
+      updated_by:
+        type: string
+      updated_on:
+        type: string
+    required:
+    - contact_number
+    - name
+    - parent_branch_id
+    type: object
+  models.ChildBranchInfrastructure:
+    properties:
+      child_branch:
+        $ref: '#/definitions/models.ChildBranch'
+      child_branch_id:
+        minimum: 1
+        type: integer
+      count:
+        minimum: 0
+        type: integer
+      created_by:
+        type: string
+      created_on:
+        type: string
+      id:
+        type: integer
+      type:
+        maxLength: 100
+        minLength: 2
+        type: string
+      updated_by:
+        type: string
+      updated_on:
+        type: string
+    required:
+    - child_branch_id
+    - count
+    - type
+    type: object
+  models.ChildBranchMember:
+    properties:
+      age:
+        maximum: 150
+        minimum: 0
+        type: integer
+      branch_role:
+        maxLength: 100
+        type: string
+      child_branch:
+        $ref: '#/definitions/models.ChildBranch'
+      child_branch_id:
+        minimum: 1
+        type: integer
+      created_by:
+        type: string
+      created_on:
+        type: string
+      date_of_birth:
+        type: string
+      date_of_samarpan:
+        type: string
+      id:
+        type: integer
+      member_type:
+        maxLength: 100
+        minLength: 2
+        type: string
+      name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      qualification:
+        maxLength: 255
+        type: string
+      responsibility:
+        maxLength: 500
+        type: string
+      updated_by:
+        type: string
+      updated_on:
+        type: string
+    required:
+    - child_branch_id
     - member_type
     - name
     type: object
@@ -1086,6 +1304,8 @@ paths:
       - BranchInfrastructure
   /api/branch-member:
     get:
+      description: Retrieve all branch members across all branches with their branch
+        information
       produces:
       - application/json
       responses:
@@ -1109,13 +1329,15 @@ paths:
     post:
       consumes:
       - application/json
+      description: Create a new member for a branch. Supports date_of_birth and date_of_samarpan
+        in format "YYYY-MM-DD" or RFC3339
       parameters:
       - description: Branch Member payload
         in: body
         name: member
         required: true
         schema:
-          $ref: '#/definitions/models.BranchMember'
+          $ref: '#/definitions/handlers.BranchMemberCreateRequest'
       produces:
       - application/json
       responses:
@@ -1143,6 +1365,7 @@ paths:
       - BranchMember
   /api/branch-member/{id}:
     delete:
+      description: Delete a branch member by ID
       parameters:
       - description: Member ID
         in: path
@@ -1178,6 +1401,8 @@ paths:
     put:
       consumes:
       - application/json
+      description: Update branch member details. Date fields (date_of_birth, date_of_samarpan)
+        accept "YYYY-MM-DD" or RFC3339 format
       parameters:
       - description: Member ID
         in: path
@@ -1219,6 +1444,7 @@ paths:
       - BranchMember
   /api/branch-member/branch/{branch_id}:
     get:
+      description: Retrieve all members associated with a specific branch
       parameters:
       - description: Branch ID
         in: path
@@ -1253,6 +1479,8 @@ paths:
       - BranchMember
   /api/branches:
     get:
+      description: Retrieve all branches with their related data (country, state,
+        district, city, infrastructure, members)
       produces:
       - application/json
       responses:
@@ -1276,6 +1504,8 @@ paths:
     post:
       consumes:
       - application/json
+      description: Create a new branch with optional infrastructure, child branches,
+        and member associations
       parameters:
       - description: Branch payload
         in: body
@@ -1310,6 +1540,8 @@ paths:
       - Branches
   /api/branches/{id}:
     delete:
+      description: Delete a branch by ID. This will also delete associated infrastructure
+        and members
       parameters:
       - description: Branch ID
         in: path
@@ -1343,6 +1575,7 @@ paths:
       tags:
       - Branches
     get:
+      description: Retrieve a specific branch by its ID with all related data
       parameters:
       - description: Branch ID
         in: path
@@ -1355,8 +1588,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/models.Branch'
         "400":
           description: Bad Request
           schema:
@@ -1377,6 +1609,8 @@ paths:
     put:
       consumes:
       - application/json
+      description: Update branch details, infrastructure, child branches, and member
+        associations
       parameters:
       - description: Branch ID
         in: path
@@ -1396,9 +1630,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/models.Branch'
         "400":
           description: Bad Request
           schema:
@@ -1414,6 +1646,41 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update a branch
+      tags:
+      - Branches
+  /api/branches/parent/{parent_id}/children:
+    get:
+      description: Retrieve all child branches of a specific parent branch
+      parameters:
+      - description: Parent Branch ID
+        in: path
+        name: parent_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Branch'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get child branches by parent branch ID
       tags:
       - Branches
   /api/branches/search:
@@ -1449,6 +1716,287 @@ paths:
       summary: Get branches by name or coordinator (or all if none provided)
       tags:
       - Branches
+  /api/child-branches:
+    get:
+      description: Retrieve all child branches with their details
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ChildBranch'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Get all child branches
+      tags:
+      - Child Branches
+    post:
+      consumes:
+      - application/json
+      description: Create a new child branch with all its details
+      parameters:
+      - description: Child Branch Data
+        in: body
+        name: childBranch
+        required: true
+        schema:
+          $ref: '#/definitions/models.ChildBranch'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ChildBranch'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new child branch
+      tags:
+      - Child Branches
+  /api/child-branches/{id}:
+    delete:
+      description: Delete a child branch by ID
+      parameters:
+      - description: Child Branch ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a child branch
+      tags:
+      - Child Branches
+    get:
+      description: Retrieve a specific child branch by its ID
+      parameters:
+      - description: Child Branch ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ChildBranch'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a child branch by ID
+      tags:
+      - Child Branches
+    put:
+      consumes:
+      - application/json
+      description: Update an existing child branch
+      parameters:
+      - description: Child Branch ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Data
+        in: body
+        name: childBranch
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ChildBranch'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a child branch
+      tags:
+      - Child Branches
+  /api/child-branches/{id}/infrastructure:
+    get:
+      description: Get all infrastructure records for a child branch
+      parameters:
+      - description: Child Branch ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ChildBranchInfrastructure'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Get child branch infrastructure
+      tags:
+      - Child Branch Infrastructure
+    post:
+      consumes:
+      - application/json
+      description: Create infrastructure record for a child branch
+      parameters:
+      - description: Infrastructure Data
+        in: body
+        name: infrastructure
+        required: true
+        schema:
+          $ref: '#/definitions/models.ChildBranchInfrastructure'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ChildBranchInfrastructure'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create child branch infrastructure
+      tags:
+      - Child Branch Infrastructure
+  /api/child-branches/{id}/members:
+    get:
+      description: Get all members of a child branch
+      parameters:
+      - description: Child Branch ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ChildBranchMember'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Get child branch members
+      tags:
+      - Child Branch Members
+    post:
+      consumes:
+      - application/json
+      description: Create a member record for a child branch
+      parameters:
+      - description: Member Data
+        in: body
+        name: member
+        required: true
+        schema:
+          $ref: '#/definitions/models.ChildBranchMember'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ChildBranchMember'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create child branch member
+      tags:
+      - Child Branch Members
+  /api/child-branches/parent/{parent_id}:
+    get:
+      description: Retrieve all child branches of a specific parent branch
+      parameters:
+      - description: Parent Branch ID
+        in: path
+        name: parent_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ChildBranch'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get child branches by parent branch ID
+      tags:
+      - Child Branches
   /api/cities:
     get:
       description: Returns a list of all cities

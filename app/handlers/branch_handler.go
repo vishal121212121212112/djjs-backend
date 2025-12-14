@@ -465,6 +465,39 @@ func GetBranchSearchHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, branches)
 }
 
+// GetChildBranchesHandler godoc
+// @Summary Get child branches by parent branch ID
+// @Description Retrieve all child branches of a specific parent branch
+// @Tags Branches
+// @Security ApiKeyAuth
+// @Produce json
+// @Param parent_id path int true "Parent Branch ID"
+// @Success 200 {array} models.Branch
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /api/branches/parent/{parent_id}/children [get]
+func GetChildBranchesHandler(c *gin.Context) {
+	parentIDParam := c.Param("parent_id")
+
+	parentID, err := strconv.ParseUint(parentIDParam, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid parent branch ID",
+		})
+		return
+	}
+
+	branches, err := services.GetChildBranches(uint(parentID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, branches)
+}
+
 // UpdateBranchHandler godoc
 // @Summary Update a branch
 // @Description Update branch details, infrastructure, child branches, and member associations
@@ -565,21 +598,37 @@ func UpdateBranchHandler(c *gin.Context) {
 		}
 	}
 
-	// Process child branches: link provided branch IDs to this branch
+	// Process child branches: link provided branch IDs to this branch and inherit coordinator
 	if hasChildren {
-		if arr, ok := childRaw.([]interface{}); ok {
-			for _, item := range arr {
-				if m, ok := item.(map[string]interface{}); ok {
-					if v, ok := m["branchId"]; ok {
-						var cid uint64
-						switch x := v.(type) {
-						case string:
-							cid, _ = strconv.ParseUint(x, 10, 64)
-						case float64:
-							cid = uint64(x)
-						}
-						if cid > 0 {
-							_ = services.UpdateBranch(uint(cid), map[string]interface{}{"parent_branch_id": uint(branchID)})
+		// Get parent branch to inherit coordinator
+		parentBranch, err := services.GetBranch(uint(branchID))
+		if err == nil && parentBranch != nil {
+			if arr, ok := childRaw.([]interface{}); ok {
+				for _, item := range arr {
+					if m, ok := item.(map[string]interface{}); ok {
+						if v, ok := m["branchId"]; ok {
+							var cid uint64
+							switch x := v.(type) {
+							case string:
+								cid, _ = strconv.ParseUint(x, 10, 64)
+							case float64:
+								cid = uint64(x)
+							}
+							if cid > 0 {
+								// Update child branch with parent relationship and coordinator
+								updateData := map[string]interface{}{
+									"parent_branch_id": uint(branchID),
+								}
+								// Inherit coordinator from parent if child doesn't have one
+								if parentBranch.CoordinatorName != "" {
+									updateData["coordinator_name"] = parentBranch.CoordinatorName
+								}
+								// Update address if provided
+								if address, ok := m["address"]; ok && address != nil && address != "" {
+									updateData["address"] = address
+								}
+								_ = services.UpdateBranch(uint(cid), updateData)
+							}
 						}
 					}
 				}

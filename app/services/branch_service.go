@@ -94,7 +94,7 @@ func GetAllBranches() ([]models.Branch, error) {
 	var branches []models.Branch
 	if err := config.DB.
 		Select("id", "name", "email", "coordinator_name", "contact_number", "established_on", "aashram_area",
-			"country_id", "state_id", "district_id", "city_id",
+			"country_id", "state_id", "district_id", "city_id", "parent_branch_id",
 			"address", "pincode", "post_office", "police_station", "open_days",
 			"daily_start_time", "daily_end_time", "status", "ncr", "region_id", "branch_code",
 			"created_on", "updated_on", "created_by", "updated_by").
@@ -102,6 +102,7 @@ func GetAllBranches() ([]models.Branch, error) {
 		Preload("State").
 		Preload("District").
 		Preload("City").
+		Preload("Children"). // Preload child branches
 		Order("id DESC"). // Order by ID descending to show newest first
 		Find(&branches).Error; err != nil {
 		return nil, err
@@ -130,6 +131,27 @@ func GetBranch(branchID uint) (*models.Branch, error) {
 		return nil, errors.New("branch not found")
 	}
 	return &branch, nil
+}
+
+// GetChildBranches fetches all child branches of a parent branch
+func GetChildBranches(parentBranchID uint) ([]models.Branch, error) {
+	var branches []models.Branch
+	if err := config.DB.
+		Select("id", "name", "email", "coordinator_name", "contact_number", "established_on", "aashram_area",
+			"country_id", "state_id", "district_id", "city_id", "parent_branch_id",
+			"address", "pincode", "post_office", "police_station", "open_days",
+			"daily_start_time", "daily_end_time", "status", "ncr", "region_id", "branch_code",
+			"created_on", "updated_on", "created_by", "updated_by").
+		Preload("Country").
+		Preload("State").
+		Preload("District").
+		Preload("City").
+		Where("parent_branch_id = ?", parentBranchID).
+		Order("id DESC").
+		Find(&branches).Error; err != nil {
+		return nil, err
+	}
+	return branches, nil
 }
 
 // GetBranchSearch fetches branches by name and/or coordinator name

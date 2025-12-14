@@ -29,6 +29,7 @@ type Branch struct {
 	ParentBranchID  *uint      `gorm:"column:parent_branch_id" json:"parent_branch_id,omitempty"`
 	Parent          *Branch    `gorm:"foreignKey:ParentBranchID" json:"parent,omitempty"`
 	Children        []Branch   `gorm:"foreignKey:ParentBranchID" json:"children,omitempty"`
+	ChildBranches   []ChildBranch `gorm:"foreignKey:ParentBranchID" json:"child_branches,omitempty"`
 	Infrastructures []BranchInfrastructure `gorm:"foreignKey:BranchID" json:"infrastructure,omitempty"`
 	Members         []BranchMember         `gorm:"foreignKey:BranchID" json:"branch_members,omitempty"`
 	Status          bool       `gorm:"default:true" json:"status"`

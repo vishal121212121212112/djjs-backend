@@ -13,7 +13,7 @@ CREATE TABLE branches (
     coordinator_name VARCHAR(150),
     contact_number VARCHAR(15) UNIQUE NOT NULL,
     established_on DATE,
-    aashram_area NUMERIC,    
+    aashram_area NUMERIC,
     country VARCHAR(100),
     state VARCHAR(100),
     district VARCHAR(100),
@@ -213,6 +213,20 @@ CREATE TABLE branch_member (
     updated_on TIMESTAMPTZ,
     created_by VARCHAR(30),
     updated_by VARCHAR(30)
+);
+
+CREATE TABLE branch_media (
+    id BIGSERIAL PRIMARY KEY,
+    branch_id BIGINT NOT NULL REFERENCES branches(id) ON DELETE CASCADE,
+    is_child_branch BOOLEAN DEFAULT FALSE,
+    file_url TEXT,
+    file_type VARCHAR(50),
+    name VARCHAR(255),
+    category VARCHAR(100),
+    created_on TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_on TIMESTAMPTZ,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100)
 );
 
 CREATE TABLE special_guests (

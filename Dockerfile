@@ -8,13 +8,13 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy rest of the project (config/, app/, main.go, etc.)
+# Copy rest of the project (config/, app/, etc.)
 # Note: .env is excluded via .dockerignore or .gitignore
 COPY . .
 
 # Build static binary
 ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
-RUN go build -o main ./main.go
+RUN go build -o main ./app/main/main.go
 
 
 ### 2. Runtime Stage
