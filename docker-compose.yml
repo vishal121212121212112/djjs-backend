@@ -1,17 +1,20 @@
-version: '3.8'
 
 services:
-  backend:
-    image: 775727899931.dkr.ecr.ap-south-1.amazonaws.com/djjs-backend:latest
-    container_name: djjs-backend
+  postgres:
+    image: postgres:15
     restart: always
-    ports:
-      - "8080:8080"
-    networks:
-      - djjs-net
     env_file:
       - .env
+    ports:
+      - "${PG_PORT}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d/
+    networks:
+      - eventreporting-net
+
+volumes:
+  db_data:
 
 networks:
-  djjs-net:
-    external: true
+  eventreporting-net:
