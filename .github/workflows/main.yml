@@ -138,6 +138,7 @@ jobs:
             -e POSTGRES_HOST="${POSTGRES_HOST}" \
             -e PG_PORT="${PG_PORT}" \
             -e JWT_SECRET="${JWT_SECRET}" \
+            -e TOKEN_PEPPER="${TOKEN_PEPPER}" \
             -e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
             -e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
             -e AWS_S3_BUCKET_NAME="${AWS_S3_BUCKET_NAME}" \
