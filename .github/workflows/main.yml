@@ -81,6 +81,7 @@ jobs:
       POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
       PG_PORT: ${{ secrets.PG_PORT }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      TOKEN_PEPPER: ${{ secrets.TOKEN_PEPPER }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_S3_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
