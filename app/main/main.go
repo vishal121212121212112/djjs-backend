@@ -13,12 +13,13 @@
 // @in header
 // @name Authorization
 
-// @host localhost:8080
 // @BasePath /
 package main
 
 import (
+	"encoding/json"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,10 +29,10 @@ import (
 	"github.com/followCode/djjs-event-reporting-backend/app/middleware"
 	"github.com/followCode/djjs-event-reporting-backend/app/services"
 	"github.com/followCode/djjs-event-reporting-backend/config"
+	"github.com/followCode/djjs-event-reporting-backend/docs"
 	"github.com/gin-contrib/cors"
-	"github.com/joho/godotenv"
-
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 
 	swaggerFiles "github.com/swaggo/files"     // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
@@ -131,7 +132,76 @@ func main() {
 	// Swagger documentation route - only enable if ENABLE_SWAGGER is set to "true"
 	// In production, this should be disabled or protected
 	if os.Getenv("ENABLE_SWAGGER") == "true" || gin.Mode() == gin.DebugMode {
-		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+		// Create a custom handler that intercepts doc.json requests
+		swaggerHandler := func(c *gin.Context) {
+			// Check if this is a request for doc.json
+			if c.Request.URL.Path == "/swagger/doc.json" || strings.HasSuffix(c.Request.URL.Path, "/doc.json") {
+				swaggerDoc := docs.SwaggerInfo.ReadDoc()
+				
+				// Parse the Swagger JSON
+				var swaggerJSON map[string]interface{}
+				if err := json.Unmarshal([]byte(swaggerDoc), &swaggerJSON); err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse swagger doc"})
+					return
+				}
+				
+				// Get API server URL from environment variable
+				apiServerURL := os.Getenv("API_SERVER_URL")
+				
+				// If not set, determine from request (works for both dev and production)
+				if apiServerURL == "" {
+					host := c.Request.Host
+					
+					// Detect scheme: use http for localhost/127.0.0.1, https for production
+					scheme := "https"
+					isLocalhost := host == "localhost" || 
+						strings.HasPrefix(host, "localhost:") ||
+						host == "127.0.0.1" ||
+						strings.HasPrefix(host, "127.0.0.1:")
+					
+					// Also check X-Forwarded-Proto header (for reverse proxies)
+					forwardedProto := c.GetHeader("X-Forwarded-Proto")
+					if forwardedProto == "http" {
+						scheme = "http"
+					} else if isLocalhost {
+						// Localhost should always use http in dev
+						scheme = "http"
+					}
+					
+					apiServerURL = scheme + "://" + host
+				}
+				
+				// Set the host and scheme dynamically for Swagger 2.0
+				if apiServerURL != "" {
+					if strings.HasPrefix(apiServerURL, "https://") {
+						swaggerJSON["schemes"] = []string{"https"}
+						host := strings.TrimPrefix(apiServerURL, "https://")
+						swaggerJSON["host"] = host
+					} else if strings.HasPrefix(apiServerURL, "http://") {
+						swaggerJSON["schemes"] = []string{"http"}
+						host := strings.TrimPrefix(apiServerURL, "http://")
+						swaggerJSON["host"] = host
+					} else {
+						// Fallback: parse host and determine scheme
+						host := apiServerURL
+						if strings.Contains(host, "localhost") || strings.Contains(host, "127.0.0.1") {
+							swaggerJSON["schemes"] = []string{"http"}
+						} else {
+							swaggerJSON["schemes"] = []string{"https"}
+						}
+						swaggerJSON["host"] = host
+					}
+				}
+				
+				c.JSON(http.StatusOK, swaggerJSON)
+				return
+			}
+			
+			// For all other requests, use the default Swagger handler
+			ginSwagger.WrapHandler(swaggerFiles.Handler)(c)
+		}
+		
+		r.GET("/swagger/*any", swaggerHandler)
 	}
 
 	// 5️⃣ Setup all API routes
