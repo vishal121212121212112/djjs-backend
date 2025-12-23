@@ -7,6 +7,7 @@ import (
 	"github.com/followCode/djjs-event-reporting-backend/app/models"
 	"github.com/followCode/djjs-event-reporting-backend/config"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 // CreateArea inserts a new area record
@@ -51,11 +52,16 @@ func GetAreaSearch(areaName string) ([]models.Area, error) {
 	return areas, nil
 }
 
+var ErrAreaNotFound = errors.New("area not found")
+
 // UpdateArea updates an area by ID
 func UpdateArea(areaID uint, updatedData map[string]interface{}) error {
 	var area models.Area
 	if err := config.DB.First(&area, areaID).Error; err != nil {
-		return errors.New("area not found")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrAreaNotFound
+		}
+		return err
 	}
 
 	now := time.Now()
@@ -69,8 +75,12 @@ func UpdateArea(areaID uint, updatedData map[string]interface{}) error {
 
 // DeleteArea deletes an area
 func DeleteArea(areaID uint) error {
-	if err := config.DB.Delete(&models.Area{}, areaID).Error; err != nil {
-		return err
+	result := config.DB.Delete(&models.Area{}, areaID)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return ErrAreaNotFound
 	}
 	return nil
 }

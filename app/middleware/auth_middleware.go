@@ -38,7 +38,14 @@ func AuthMiddleware() gin.HandlerFunc {
             return
         }
 
-        userID := uint(claims["user_id"].(float64))
+        // Safely extract user_id from claims
+        userIDFloat, ok := claims["user_id"].(float64)
+        if !ok {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user_id in token"})
+            c.Abort()
+            return
+        }
+        userID := uint(userIDFloat)
 
         var user models.User
         err = config.DB.First(&user, userID).Error

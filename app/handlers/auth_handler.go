@@ -61,7 +61,12 @@ func LogoutHandler(c *gin.Context) {
 		return
 	}
 
-	userID := userIDInterface.(uint)
+	// Safely type assert userID
+	userID, ok := userIDInterface.(uint)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "invalid user ID type"})
+		return
+	}
 	if err := services.Logout(userID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not logout"})
 		return

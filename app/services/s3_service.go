@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -81,8 +82,9 @@ func UploadFile(ctx context.Context, fileData []byte, fileName string, contentTy
 	ext := filepath.Ext(fileName)
 	uniqueFileName := fmt.Sprintf("%s/%s%s", folder, uuid.New().String(), ext)
 
-	// Upload file to S3 with Glacier Instant Retrieval storage class
-	storageClass := types.StorageClassGlacierIr // Use Glacier Instant Retrieval
+	// Upload file to S3 with Standard storage class for immediate access
+	// Changed from Glacier Instant Retrieval to Standard for better accessibility
+	storageClass := types.StorageClassStandard
 	putInput := &s3.PutObjectInput{
 		Bucket:       aws.String(S3BucketName),
 		Key:          aws.String(uniqueFileName),
@@ -105,7 +107,9 @@ func UploadFile(ctx context.Context, fileData []byte, fileName string, contentTy
 		return "", fmt.Errorf("S3 upload failed (bucket: %s, key: %s): %w", S3BucketName, uniqueFileName, err)
 	}
 
-	// Return the public URL (format: https://bucket-name.s3.region.amazonaws.com/key)
+	// Return the S3 URL - use presigned URL format for better compatibility
+	// For direct access, we'll use the standard S3 URL format
+	// Note: If bucket is not public, frontend should use presigned URLs via /api/files/{media_id}/download
 	url := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", S3BucketName, S3Region, uniqueFileName)
 	return url, nil
 }
@@ -118,15 +122,37 @@ func GetPresignedURL(ctx context.Context, s3Key string, expiration time.Duration
 		}
 	}
 
+	// Validate S3 key
+	if s3Key == "" {
+		return "", fmt.Errorf("S3 key cannot be empty")
+	}
+
+	// Verify object exists (optional check - can be removed if it causes performance issues)
+	// This helps identify permission issues early
+	_, err := S3Client.HeadObject(ctx, &s3.HeadObjectInput{
+		Bucket: aws.String(S3BucketName),
+		Key:    aws.String(s3Key),
+	})
+	if err != nil {
+		// Log but don't fail - presigned URL might still work even if HeadObject fails
+		fmt.Printf("Warning: Could not verify object existence (bucket: %s, key: %s): %v\n", S3BucketName, s3Key, err)
+		fmt.Printf("This might indicate IAM permission issues. Ensure the IAM user has s3:GetObject permission.\n")
+	}
+
 	presignClient := s3.NewPresignClient(S3Client)
+	
+	// Generate presigned URL with response headers for CORS support
 	request, err := presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(S3BucketName),
 		Key:    aws.String(s3Key),
+		// Add response headers for CORS support
+		ResponseCacheControl:       aws.String("public, max-age=3600"),
+		ResponseContentDisposition: nil, // Let browser handle disposition
 	}, func(opts *s3.PresignOptions) {
 		opts.Expires = expiration
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to generate presigned URL: %w", err)
+		return "", fmt.Errorf("failed to generate presigned URL (bucket: %s, key: %s): %w. Check AWS IAM permissions for s3:GetObject", S3BucketName, s3Key, err)
 	}
 
 	return request.URL, nil
@@ -152,12 +178,38 @@ func DeleteFile(ctx context.Context, s3Key string) error {
 }
 
 // GetS3KeyFromURL extracts the S3 key from a full S3 URL
-func GetS3KeyFromURL(url string) string {
-	// Extract key from URL like: https://bucket.s3.region.amazonaws.com/key
-	parts := strings.Split(url, ".amazonaws.com/")
-	if len(parts) > 1 {
-		return parts[1]
+func GetS3KeyFromURL(s3URL string) string {
+	// Handle presigned URLs - extract key before query parameters
+	// Format: https://bucket.s3.region.amazonaws.com/key?X-Amz-Algorithm=...
+	if strings.Contains(s3URL, "?") {
+		s3URL = strings.Split(s3URL, "?")[0]
 	}
+	
+	// Extract key from URL like: https://bucket.s3.region.amazonaws.com/key
+	parts := strings.Split(s3URL, ".amazonaws.com/")
+	if len(parts) > 1 {
+		key := parts[1]
+		// URL decode the key in case it was encoded
+		decodedKey, err := url.QueryUnescape(key)
+		if err == nil {
+			return decodedKey
+		}
+		return key
+	}
+	
+	// Try alternative format: https://s3.region.amazonaws.com/bucket/key
+	if strings.Contains(s3URL, "/"+S3BucketName+"/") {
+		parts := strings.Split(s3URL, "/"+S3BucketName+"/")
+		if len(parts) > 1 {
+			key := parts[1]
+			decodedKey, err := url.QueryUnescape(key)
+			if err == nil {
+				return decodedKey
+			}
+			return key
+		}
+	}
+	
 	return ""
 }
 

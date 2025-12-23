@@ -6,6 +6,7 @@ import (
 
 	"github.com/followCode/djjs-event-reporting-backend/app/models"
 	"github.com/followCode/djjs-event-reporting-backend/config"
+	"gorm.io/gorm"
 )
 
 // Create a new event
@@ -65,12 +66,17 @@ func SearchEvents(search string) ([]models.EventDetails, error) {
 	return events, nil
 }
 
+var ErrEventNotFound = errors.New("event not found")
+
 // Update event
 func UpdateEvent(eventID uint, updatedData map[string]interface{}) error {
 	var event models.EventDetails
 
 	if err := config.DB.First(&event, eventID).Error; err != nil {
-		return errors.New("event not found")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrEventNotFound
+		}
+		return err
 	}
 
 	now := time.Now()
@@ -145,7 +151,10 @@ func GetEventByID(eventID uint) (*models.EventDetails, error) {
 		Preload("EventType").
 		Preload("EventCategory").
 		First(&event, eventID).Error; err != nil {
-		return nil, errors.New("event not found")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrEventNotFound
+		}
+		return nil, err
 	}
 
 	return &event, nil
@@ -156,7 +165,10 @@ func UpdateEventStatus(eventID uint, status string) error {
 	var event models.EventDetails
 
 	if err := config.DB.First(&event, eventID).Error; err != nil {
-		return errors.New("event not found")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrEventNotFound
+		}
+		return err
 	}
 
 	now := time.Now()

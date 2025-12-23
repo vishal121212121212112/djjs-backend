@@ -8,6 +8,7 @@ import (
 	"github.com/followCode/djjs-event-reporting-backend/app/models"
 	"github.com/followCode/djjs-event-reporting-backend/config"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 // Helper: Generate random 8-character alphanumeric password
@@ -104,11 +105,16 @@ func GetUserSearch(email, contact string) ([]models.User, error) {
 	return users, nil
 }
 
+var ErrUserNotFound = errors.New("user not found")
+
 // UpdateUser updates user details
 func UpdateUser(userID uint, updatedData map[string]interface{}) error {
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
-		return errors.New("user not found")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrUserNotFound
+		}
+		return err
 	}
 
 	// Check if user is deleted
@@ -137,7 +143,10 @@ func UpdateUser(userID uint, updatedData map[string]interface{}) error {
 func DeleteUser(userID uint) error {
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
-		return errors.New("user not found")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrUserNotFound
+		}
+		return err
 	}
 
 	user.IsDeleted = true
@@ -154,7 +163,10 @@ func DeleteUser(userID uint) error {
 func ChangePassword(userID uint, oldPassword, newPassword string) error {
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
-		return errors.New("user not found")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrUserNotFound
+		}
+		return err
 	}
 
 	// Verify old password
@@ -184,7 +196,10 @@ func ChangePassword(userID uint, oldPassword, newPassword string) error {
 func ResetPassword(userID uint) (string, error) {
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
-		return "", errors.New("user not found")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", ErrUserNotFound
+		}
+		return "", err
 	}
 
 	plainPassword := generateRandomPassword()

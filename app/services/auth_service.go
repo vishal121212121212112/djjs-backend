@@ -6,7 +6,7 @@ import (
 
     "github.com/followCode/djjs-event-reporting-backend/config"
     "github.com/followCode/djjs-event-reporting-backend/app/models"
-    //"golang.org/x/crypto/bcrypt"
+    "golang.org/x/crypto/bcrypt"
     "github.com/golang-jwt/jwt/v5"
 )
 
@@ -17,14 +17,10 @@ func Login(email, password string) (string, error) {
         return "", errors.New("user not found")
     }
 
-    // Compare hashed password - will add this later
-    // if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-    //     return "", errors.New("invalid password")
-    // }
-
-	if user.Password != password {
-    	return "", errors.New("invalid password")
-	}
+    // Compare hashed password using bcrypt
+    if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+        return "", errors.New("invalid password")
+    }
 
     now := time.Now()
     // Set first login if not set

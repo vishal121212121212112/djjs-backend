@@ -319,10 +319,14 @@ func DownloadFileHandler(c *gin.Context) {
 	}
 
 	// Generate presigned URL (valid for 1 hour)
-	// Note: Glacier Instant Retrieval provides instant access, so no special handling needed
 	presignedURL, err := services.GetPresignedURL(c.Request.Context(), s3Key, time.Hour)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate download URL"})
+		// Log detailed error for debugging
+		fmt.Printf("Error generating presigned URL for key %s: %v\n", s3Key, err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "failed to generate download URL",
+			"details": "Check AWS credentials and S3 bucket permissions",
+		})
 		return
 	}
 

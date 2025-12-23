@@ -20,6 +20,7 @@ package main
 import (
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/followCode/djjs-event-reporting-backend/app/api"
@@ -63,13 +64,27 @@ func main() {
 	// 4️⃣ Create Gin router
 	r := gin.Default()
 
+	// Add timeout middleware (30 seconds)
+	r.Use(middleware.TimeoutMiddleware(30 * time.Second))
+
 	// Enable CORS for Angular frontend
+	// Get allowed origins from environment, default to localhost for development
+	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
+	if allowedOrigins == "" {
+		allowedOrigins = "http://localhost:4200,http://localhost:3000"
+	}
+	
+	origins := []string{}
+	for _, origin := range strings.Split(allowedOrigins, ",") {
+		origins = append(origins, strings.TrimSpace(origin))
+	}
+	
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
+		AllowOrigins:     origins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowHeaders:     []string{"*"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "accept", "origin", "Cache-Control", "X-Requested-With"},
 		ExposeHeaders:    []string{"Content-Length", "Authorization"},
-		AllowCredentials: false, // must be false if AllowOrigins = "*"
+		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
 
