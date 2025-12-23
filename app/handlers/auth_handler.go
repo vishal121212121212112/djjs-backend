@@ -31,7 +31,18 @@ type RegisterRequest struct {
 	Name     string `json:"name" binding:"required,min=2"`
 }
 
-// Register handles user registration
+// Register godoc
+// @Summary Register a new user
+// @Description Register a new user account. An email verification link will be sent to the provided email address.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param registerRequest body RegisterRequest true "Registration payload"
+// @Success 201 {object} map[string]string "Registration successful"
+// @Failure 400 {object} map[string]string "Invalid request or validation failed"
+// @Failure 409 {object} map[string]string "Account already exists"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -66,7 +77,17 @@ type VerifyEmailRequest struct {
 	Token string `json:"token" binding:"required"`
 }
 
-// VerifyEmail handles email verification
+// VerifyEmail godoc
+// @Summary Verify email address
+// @Description Verify user email address using the verification token sent via email.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param verifyEmailRequest body VerifyEmailRequest true "Email verification payload"
+// @Success 200 {object} map[string]string "Email verified successfully"
+// @Failure 400 {object} map[string]string "Invalid token, expired token, or token already used"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/auth/verify-email [post]
 func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 	var req VerifyEmailRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -111,7 +132,17 @@ type UserResponse struct {
 	Name  string `json:"name"`
 }
 
-// Login handles user login
+// Login godoc
+// @Summary Login user
+// @Description Authenticate user and return access token. Refresh token is set as HttpOnly cookie.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param loginRequest body LoginRequest true "Login credentials"
+// @Success 200 {object} LoginResponse "Login successful"
+// @Failure 400 {object} map[string]string "Invalid request"
+// @Failure 401 {object} map[string]string "Invalid credentials"
+// @Router /api/auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -155,7 +186,14 @@ type RefreshResponse struct {
 	CsrfToken   string `json:"csrfToken"`
 }
 
-// Refresh handles token refresh
+// Refresh godoc
+// @Summary Refresh access token
+// @Description Refresh the access token using the refresh token from HttpOnly cookie.
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} RefreshResponse "Token refreshed successfully"
+// @Failure 401 {object} map[string]string "Refresh token missing or invalid"
+// @Router /api/auth/refresh [post]
 func (h *AuthHandler) Refresh(c *gin.Context) {
 	// Get refresh token from cookie
 	refreshToken, err := c.Cookie("refresh_token")
@@ -192,7 +230,13 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	})
 }
 
-// Logout handles user logout
+// Logout godoc
+// @Summary Logout user
+// @Description Logout user and revoke current session. Clears authentication cookies.
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} map[string]string "Logged out successfully"
+// @Router /api/auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	userID, exists := middleware.GetUserID(c)
 	if !exists {
@@ -219,7 +263,16 @@ type MeResponse struct {
 	User UserResponse `json:"user"`
 }
 
-// Me returns current user information
+// Me godoc
+// @Summary Get current user information
+// @Description Get the currently authenticated user's information.
+// @Tags Auth
+// @Security ApiKeyAuth
+// @Produce json
+// @Success 200 {object} MeResponse "User information"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 404 {object} map[string]string "User not found"
+// @Router /api/auth/me [get]
 func (h *AuthHandler) Me(c *gin.Context) {
 	userID, exists := middleware.GetUserID(c)
 	if !exists {
@@ -252,7 +305,16 @@ type ForgotPasswordRequest struct {
 	Email string `json:"email" binding:"required,email"`
 }
 
-// ForgotPassword handles password reset request
+// ForgotPassword godoc
+// @Summary Request password reset
+// @Description Request a password reset link to be sent to the provided email address. Always returns 200 to prevent email enumeration.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param forgotPasswordRequest body ForgotPasswordRequest true "Password reset request"
+// @Success 200 {object} map[string]string "Password reset link sent (if account exists)"
+// @Failure 400 {object} map[string]string "Invalid request"
+// @Router /api/auth/forgot-password [post]
 func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	var req ForgotPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -275,7 +337,17 @@ type ResetPasswordRequest struct {
 	NewPassword string `json:"newPassword" binding:"required,min=8"`
 }
 
-// ResetPassword handles password reset
+// ResetPassword godoc
+// @Summary Reset password
+// @Description Reset password using the token received via email from forgot-password endpoint.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param resetPasswordRequest body ResetPasswordRequest true "Password reset payload"
+// @Success 200 {object} map[string]string "Password reset successful"
+// @Failure 400 {object} map[string]string "Invalid token, expired token, or token already used"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	var req ResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -306,7 +378,19 @@ type ChangePasswordRequest struct {
 	NewPassword     string `json:"newPassword" binding:"required,min=8"`
 }
 
-// ChangePassword handles password change
+// ChangePassword godoc
+// @Summary Change password
+// @Description Change password for the currently authenticated user. Requires current password.
+// @Tags Auth
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param changePasswordRequest body ChangePasswordRequest true "Password change payload"
+// @Success 200 {object} map[string]string "Password changed successfully"
+// @Failure 400 {object} map[string]string "Invalid request"
+// @Failure 401 {object} map[string]string "Unauthorized or invalid current password"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/auth/change-password [post]
 func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	userID, exists := middleware.GetUserID(c)
 	if !exists {
@@ -348,7 +432,16 @@ type SessionResponse struct {
 	IsCurrentSession bool      `json:"isCurrentSession"`
 }
 
-// GetSessions returns all active sessions for the current user
+// GetSessions godoc
+// @Summary Get all active sessions
+// @Description Get all active sessions for the currently authenticated user.
+// @Tags Auth
+// @Security ApiKeyAuth
+// @Produce json
+// @Success 200 {object} GetSessionsResponse "List of active sessions"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/auth/sessions [get]
 func (h *AuthHandler) GetSessions(c *gin.Context) {
 	userID, exists := middleware.GetUserID(c)
 	if !exists {
@@ -381,7 +474,18 @@ func (h *AuthHandler) GetSessions(c *gin.Context) {
 	})
 }
 
-// RevokeSession revokes a specific session (session ID from URL parameter)
+// RevokeSession godoc
+// @Summary Revoke a session
+// @Description Revoke a specific session by session ID for the currently authenticated user.
+// @Tags Auth
+// @Security ApiKeyAuth
+// @Produce json
+// @Param id path string true "Session ID"
+// @Success 200 {object} map[string]string "Session revoked successfully"
+// @Failure 400 {object} map[string]string "Bad request"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/auth/sessions/{id} [delete]
 func (h *AuthHandler) RevokeSession(c *gin.Context) {
 	userID, exists := middleware.GetUserID(c)
 	if !exists {
