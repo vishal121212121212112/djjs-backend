@@ -143,41 +143,55 @@ func GetAllEventsHandler(c *gin.Context) {
 			mediaList = []models.EventMedia{}
 		}
 
+		// Get promotion materials count
+		promotionMaterials, errPromo := services.GetPromotionMaterialDetailsByEventID(event.ID)
+		if errPromo != nil {
+			promotionMaterials = []models.PromotionMaterialDetails{}
+		}
+
+		// Get donations count
+		donations, errDonations := services.GetDonationsByEvent(event.ID)
+		if errDonations != nil {
+			donations = []models.Donation{}
+		}
+
 		// Convert event to map and add counts
 		eventMap := gin.H{
-			"id":                   event.ID,
-			"event_type_id":        event.EventTypeID,
-			"event_category_id":    event.EventCategoryID,
-			"scale":                event.Scale,
-			"theme":                event.Theme,
-			"start_date":           event.StartDate,
-			"end_date":             event.EndDate,
-			"daily_start_time":     event.DailyStartTime,
-			"daily_end_time":       event.DailyEndTime,
-			"spiritual_orator":     event.SpiritualOrator,
-			"country":              event.Country,
-			"state":                event.State,
-			"city":                 event.City,
-			"district":             event.District,
-			"post_office":          event.PostOffice,
-			"pincode":              event.Pincode,
-			"address":              event.Address,
-			"beneficiary_men":      event.BeneficiaryMen,
-			"beneficiary_women":    event.BeneficiaryWomen,
-			"beneficiary_child":    event.BeneficiaryChild,
-			"initiation_men":       event.InitiationMen,
-			"initiation_women":     event.InitiationWomen,
-			"initiation_child":     event.InitiationChild,
-			"status":               event.Status,
-			"created_on":           event.CreatedOn,
-			"updated_on":           event.UpdatedOn,
-			"created_by":           event.CreatedBy,
-			"updated_by":           event.UpdatedBy,
-			"event_type":           event.EventType,
-			"event_category":       event.EventCategory,
-			"special_guests_count": len(specialGuests),
-			"volunteers_count":     len(volunteers),
-			"media_count":          len(mediaList),
+			"id":                       event.ID,
+			"event_type_id":            event.EventTypeID,
+			"event_category_id":        event.EventCategoryID,
+			"scale":                    event.Scale,
+			"theme":                    event.Theme,
+			"start_date":               event.StartDate,
+			"end_date":                 event.EndDate,
+			"daily_start_time":         event.DailyStartTime,
+			"daily_end_time":           event.DailyEndTime,
+			"spiritual_orator":         event.SpiritualOrator,
+			"country":                  event.Country,
+			"state":                    event.State,
+			"city":                     event.City,
+			"district":                 event.District,
+			"post_office":              event.PostOffice,
+			"pincode":                  event.Pincode,
+			"address":                  event.Address,
+			"beneficiary_men":          event.BeneficiaryMen,
+			"beneficiary_women":        event.BeneficiaryWomen,
+			"beneficiary_child":        event.BeneficiaryChild,
+			"initiation_men":           event.InitiationMen,
+			"initiation_women":         event.InitiationWomen,
+			"initiation_child":         event.InitiationChild,
+			"status":                   event.Status,
+			"created_on":               event.CreatedOn,
+			"updated_on":               event.UpdatedOn,
+			"created_by":               event.CreatedBy,
+			"updated_by":               event.UpdatedBy,
+			"event_type":               event.EventType,
+			"event_category":           event.EventCategory,
+			"special_guests_count":     len(specialGuests),
+			"volunteers_count":         len(volunteers),
+			"media_count":              len(mediaList),
+			"promotion_materials_count": len(promotionMaterials),
+			"donations_count":          len(donations),
 		}
 		eventsWithCounts = append(eventsWithCounts, eventMap)
 	}
@@ -234,15 +248,32 @@ func GetEventByIdHandler(c *gin.Context) {
 		mediaList = []models.EventMedia{}
 	}
 
+	// Fetch promotion materials
+	promotionMaterials, errPromo := services.GetPromotionMaterialDetailsByEventID(uint(eventID))
+	if errPromo != nil {
+		// Return empty array if not found (consistent with other related data)
+		promotionMaterials = []models.PromotionMaterialDetails{}
+	}
+
+	// Fetch donations
+	donations, errDonations := services.GetDonationsByEvent(uint(eventID))
+	if errDonations != nil {
+		donations = []models.Donation{}
+	}
+
 	// Build response with event and related data
 	response := gin.H{
-		"event":              event,
-		"specialGuests":      specialGuests,
-		"volunteers":         volunteers,
-		"media":              mediaList,
-		"specialGuestsCount": len(specialGuests),
-		"volunteersCount":    len(volunteers),
-		"mediaCount":         len(mediaList),
+		"event":                  event,
+		"specialGuests":          specialGuests,
+		"volunteers":             volunteers,
+		"media":                  mediaList,
+		"promotionMaterials":     promotionMaterials,
+		"donations":              donations,
+		"specialGuestsCount":     len(specialGuests),
+		"volunteersCount":        len(volunteers),
+		"mediaCount":             len(mediaList),
+		"promotionMaterialsCount": len(promotionMaterials),
+		"donationsCount":         len(donations),
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -519,11 +550,28 @@ func DownloadEventHandler(c *gin.Context) {
 		return
 	}
 
+	// Fetch all related data
+	specialGuests, _ := services.GetSpecialGuestByEventID(uint(eventID))
+	volunteers, _ := services.GetVolunteerByEventID(uint(eventID))
+	mediaList, _ := services.GetEventMediaByEventID(uint(eventID))
+	promotionMaterials, _ := services.GetPromotionMaterialDetailsByEventID(uint(eventID))
+	donations, _ := services.GetDonationsByEvent(uint(eventID))
+
+	// Build complete event data with all related information
+	eventData := gin.H{
+		"event":              event,
+		"specialGuests":      specialGuests,
+		"volunteers":         volunteers,
+		"media":              mediaList,
+		"promotionMaterials": promotionMaterials,
+		"donations":          donations,
+	}
+
 	// TODO: Generate PDF or return JSON
 	// For now, return JSON with proper headers for download
 	c.Header("Content-Type", "application/json")
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=event_%d_%s.json", eventID, time.Now().Format("20060102_150405")))
-	c.JSON(http.StatusOK, event)
+	c.JSON(http.StatusOK, eventData)
 }
 
 // ----------------------------------------------------

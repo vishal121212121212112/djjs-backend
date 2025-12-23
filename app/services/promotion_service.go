@@ -25,14 +25,16 @@ func GetAllPromotionMaterialDetails() ([]models.PromotionMaterialDetails, error)
 }
 
 // GetPromotionMaterialDetailsByEventID retrieves all PromotionMaterialDetails records by EventID
+// Returns empty array if no records found (consistent with other services)
 func GetPromotionMaterialDetailsByEventID(eventID uint) ([]models.PromotionMaterialDetails, error) {
 	var details []models.PromotionMaterialDetails
 	if err := config.DB.
-		Preload("Event").
+		Preload("PromotionMaterial").
 		Where("event_id = ?", eventID).
 		Find(&details).Error; err != nil {
-		return nil, errors.New("no promotion material details found for the given event ID")
+		return nil, err
 	}
+	// GORM Find returns empty slice (not error) when no records found
 	return details, nil
 }
 

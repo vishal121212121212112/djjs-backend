@@ -28,13 +28,15 @@ func GetAllDonations() ([]models.Donation, error) {
 }
 
 // GetDonationsByEvent retrieves donations for a specific event
+// Returns empty array if no records found (consistent with other services)
 func GetDonationsByEvent(eventID uint) ([]models.Donation, error) {
 	var donations []models.Donation
 
 	if err := config.DB.Where("event_id = ?", eventID).Find(&donations).Error; err != nil {
-		return nil, errors.New("error fetching donations")
+		return nil, err
 	}
 
+	// GORM Find returns empty slice (not error) when no records found
 	return donations, nil
 }
 

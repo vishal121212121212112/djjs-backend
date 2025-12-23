@@ -19,6 +19,7 @@ func SetupEventRoutes(r *gin.RouterGroup) {
 		events.GET("/:event_id/specialguests", handlers.GetSpecialGuestByEventID)
 		events.GET("/:event_id/volunteers", handlers.GetVolunteerByEventID)
 		events.GET("/:event_id/donations", handlers.GetDonationsByEvent)
+		events.GET("/:event_id/promotion-materials", handlers.GetPromotionMaterialDetailsByEventIDHandler)
 
 		events.GET("/:event_id", handlers.GetEventByIdHandler)
 		events.GET("/:event_id/download", handlers.DownloadEventHandler)
