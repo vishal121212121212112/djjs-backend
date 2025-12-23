@@ -62,7 +62,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: arn:aws:iam::775727899931:role/github-actions-ecr-role
+          role-to-assume: arn:aws:iam::775727899931:role/github-actions-ecr-role1
           aws-region: ap-south-1
 
       - name: Pull & run container
