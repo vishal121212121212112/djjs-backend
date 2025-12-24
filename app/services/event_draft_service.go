@@ -36,6 +36,8 @@ func SaveDraft(draftID *uint, step string, data map[string]interface{}, userEmai
 		draft.SpecialGuestsDraft = models.JSONB(data)
 	case "volunteers":
 		draft.VolunteersDraft = models.JSONB(data)
+	case "donations":
+		draft.DonationsDraft = models.JSONB(data)
 	default:
 		return 0, errors.New("invalid step name")
 	}

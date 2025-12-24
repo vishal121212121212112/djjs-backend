@@ -118,7 +118,15 @@ func CreateEventRelatedData(eventID uint, payload struct {
 	}
 
 	// Create Promotion Material Details
-	if materialTypes, ok := payload.MediaPromotion["promotionalMaterials"].([]interface{}); ok {
+	// Handle materialTypes from top-level payload or from mediaPromotion.promotionalMaterials
+	var materialTypes []interface{}
+	if len(payload.MaterialTypes) > 0 {
+		materialTypes = payload.MaterialTypes
+	} else if promoMaterials, ok := payload.MediaPromotion["promotionalMaterials"].([]interface{}); ok {
+		materialTypes = promoMaterials
+	}
+
+	if len(materialTypes) > 0 {
 		for _, materialItem := range materialTypes {
 			if materialMap, ok := materialItem.(map[string]interface{}); ok {
 				material := models.PromotionMaterialDetails{
@@ -259,8 +267,15 @@ func CreateEventRelatedData(eventID uint, payload struct {
 			if val, ok := volMap["contact"].(string); ok {
 				volunteer.Contact = val
 			}
+			// Handle days field - can be number (float64) or string
 			if val, ok := volMap["days"].(float64); ok {
 				volunteer.NumberOfDays = int(val)
+			} else if val, ok := volMap["days"].(string); ok && val != "" {
+				if daysInt, err := strconv.Atoi(val); err == nil {
+					volunteer.NumberOfDays = daysInt
+				}
+			} else if val, ok := volMap["days"].(int); ok {
+				volunteer.NumberOfDays = val
 			}
 			if val, ok := volMap["seva"].(string); ok {
 				volunteer.SevaInvolved = val
@@ -290,9 +305,44 @@ func CreateEventRelatedData(eventID uint, payload struct {
 				EventID: eventID,
 			}
 
-			// Get branch ID from generalDetails or use a default (you may need to adjust this)
-			// For now, we'll set it to 0 or get from context if available
-			donation.BranchID = 0 // TODO: Get from context or form data
+			// Get branch ID from donation payload - try multiple sources
+			// First check if branchId is in the donation item itself
+			if val, ok := donationMap["branchId"].(string); ok && val != "" {
+				// First try to parse as numeric ID
+				if branchID, err := strconv.ParseUint(val, 10, 64); err == nil {
+					donation.BranchID = uint(branchID)
+				} else {
+					// If not numeric, treat as branch code and look it up
+					var branch models.Branch
+					if err := config.DB.Where("branch_code = ?", val).First(&branch).Error; err == nil {
+						donation.BranchID = branch.ID
+					}
+				}
+			} else if val, ok := donationMap["branchId"].(float64); ok {
+				donation.BranchID = uint(val)
+			} else if val, ok := donationMap["branch_id"].(float64); ok {
+				donation.BranchID = uint(val)
+			} else if val, ok := donationMap["branch_code"].(string); ok && val != "" {
+				// Also check for branch_code field directly
+				var branch models.Branch
+				if err := config.DB.Where("branch_code = ?", val).First(&branch).Error; err == nil {
+					donation.BranchID = branch.ID
+				}
+			} else if branchIdVal, ok := payload.GeneralDetails["branchId"]; ok {
+				// Fallback: try to get branchId from generalDetails
+				if branchIdStr, ok := branchIdVal.(string); ok && branchIdStr != "" {
+					if branchID, err := strconv.ParseUint(branchIdStr, 10, 64); err == nil {
+						donation.BranchID = uint(branchID)
+					} else {
+						var branch models.Branch
+						if err := config.DB.Where("branch_code = ?", branchIdStr).First(&branch).Error; err == nil {
+							donation.BranchID = branch.ID
+						}
+					}
+				} else if branchIdFloat, ok := branchIdVal.(float64); ok {
+					donation.BranchID = uint(branchIdFloat)
+				}
+			}
 
 			if val, ok := donationMap["type"].(string); ok {
 				donation.DonationType = val
@@ -314,8 +364,13 @@ func CreateEventRelatedData(eventID uint, payload struct {
 				}
 			}
 
-			if donation.DonationType != "" {
-				_ = config.DB.Create(&donation)
+			// Only create donation if we have required fields
+			if donation.DonationType != "" && donation.BranchID > 0 {
+				if err := config.DB.Create(&donation).Error; err != nil {
+					// Log error but continue processing other donations
+					// Return error will be logged by caller
+					return err
+				}
 			}
 		}
 	}

@@ -13,6 +13,7 @@ type EventDraft struct {
 	MediaPromotionDraft JSONB `gorm:"type:jsonb" json:"media_promotion_draft,omitempty"`
 	SpecialGuestsDraft  JSONB `gorm:"type:jsonb" json:"special_guests_draft,omitempty"`
 	VolunteersDraft     JSONB `gorm:"type:jsonb" json:"volunteers_draft,omitempty"`
+	DonationsDraft      JSONB `gorm:"type:jsonb" json:"donations_draft,omitempty"`
 
 	// Optional: Link to event if draft is associated with an existing event
 	EventID *uint `json:"event_id,omitempty"`

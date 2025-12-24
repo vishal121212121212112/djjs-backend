@@ -606,7 +606,7 @@ func DownloadEventHandler(c *gin.Context) {
 // @Produce json
 // @Param draft body object true "Draft payload" example({"draftId":null,"step":"generalDetails","data":{"eventType":"Spiritual","eventName":"Bhagwat Katha","scale":"Large (L)"}})
 // @Success 200 {object} map[string]interface{} "Draft saved successfully" example({"draftId":1,"message":"Draft saved successfully"})
-// @Failure 400 {object} map[string]string "Bad Request" example({"error":"Invalid step name. Must be one of: generalDetails, mediaPromotion, specialGuests, volunteers"})
+// @Failure 400 {object} map[string]string "Bad Request" example({"error":"Invalid step name. Must be one of: generalDetails, mediaPromotion, specialGuests, volunteers, donations"})
 // @Failure 500 {object} map[string]string "Internal Server Error" example({"error":"Failed to save draft"})
 // @Router /api/events/draft [post]
 func SaveDraftHandler(c *gin.Context) {
@@ -627,10 +627,11 @@ func SaveDraftHandler(c *gin.Context) {
 		"mediaPromotion": true,
 		"specialGuests":  true,
 		"volunteers":     true,
+		"donations":      true,
 	}
 
 	if !validSteps[draftRequest.Step] {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid step name. Must be one of: generalDetails, mediaPromotion, specialGuests, volunteers"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid step name. Must be one of: generalDetails, mediaPromotion, specialGuests, volunteers, donations"})
 		return
 	}
 
@@ -702,12 +703,12 @@ func SaveDraftHandler(c *gin.Context) {
 
 // GetDraftHandler godoc
 // @Summary Get draft data by draft ID
-// @Description Retrieves draft data for event creation. Returns all draft steps (generalDetails, mediaPromotion, specialGuests, volunteers) stored in the event_drafts table.
+// @Description Retrieves draft data for event creation. Returns all draft steps (generalDetails, mediaPromotion, specialGuests, volunteers, donations) stored in the event_drafts table.
 // @Tags Events
 // @Security ApiKeyAuth
 // @Produce json
 // @Param draftId path int true "Draft ID"
-// @Success 200 {object} map[string]interface{} "Draft data" example({"draftId":1,"generalDetails":{},"mediaPromotion":{},"specialGuests":{},"volunteers":{}})
+// @Success 200 {object} map[string]interface{} "Draft data" example({"draftId":1,"generalDetails":{},"mediaPromotion":{},"specialGuests":{},"volunteers":{},"donations":{}})
 // @Failure 400 {object} map[string]string "Bad Request" example({"error":"Invalid draft ID"})
 // @Failure 404 {object} map[string]string "Not Found" example({"error":"Draft not found"})
 // @Failure 500 {object} map[string]string "Internal Server Error" example({"error":"Failed to retrieve draft"})
@@ -732,6 +733,7 @@ func GetDraftHandler(c *gin.Context) {
 		"mediaPromotion": draft.MediaPromotionDraft,
 		"specialGuests":  draft.SpecialGuestsDraft,
 		"volunteers":     draft.VolunteersDraft,
+		"donations":      draft.DonationsDraft,
 		"createdOn":      draft.CreatedOn,
 		"updatedOn":      draft.UpdatedOn,
 	})
@@ -747,7 +749,7 @@ func GetDraftHandler(c *gin.Context) {
 // @Tags Events
 // @Security ApiKeyAuth
 // @Produce json
-// @Success 200 {object} map[string]interface{} "Draft data" example({"draftId":1,"generalDetails":{},"mediaPromotion":{},"specialGuests":{},"volunteers":{}})
+// @Success 200 {object} map[string]interface{} "Draft data" example({"draftId":1,"generalDetails":{},"mediaPromotion":{},"specialGuests":{},"volunteers":{},"donations":{}})
 // @Failure 404 {object} map[string]string "Not Found" example({"error":"No draft found for user"})
 // @Failure 500 {object} map[string]string "Internal Server Error" example({"error":"Failed to retrieve draft"})
 // @Router /api/events/draft/latest [get]
@@ -779,6 +781,7 @@ func GetLatestDraftByUserHandler(c *gin.Context) {
 		"mediaPromotion": draft.MediaPromotionDraft,
 		"specialGuests":  draft.SpecialGuestsDraft,
 		"volunteers":     draft.VolunteersDraft,
+		"donations":      draft.DonationsDraft,
 		"createdOn":      draft.CreatedOn,
 		"updatedOn":      draft.UpdatedOn,
 	})
