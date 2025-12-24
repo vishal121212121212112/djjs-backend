@@ -231,13 +231,26 @@ func CreateEventRelatedData(eventID uint, payload struct {
 				EventID: eventID,
 			}
 
-			// Branch ID - try to parse from string or number
+			// Branch ID - try to parse from string or number, or look up by branch code
 			if val, ok := volMap["branchId"].(string); ok && val != "" {
+				// First try to parse as numeric ID
 				if branchID, err := strconv.ParseUint(val, 10, 64); err == nil {
 					volunteer.BranchID = uint(branchID)
+				} else {
+					// If not numeric, treat as branch code and look it up
+					var branch models.Branch
+					if err := config.DB.Where("branch_code = ?", val).First(&branch).Error; err == nil {
+						volunteer.BranchID = branch.ID
+					}
 				}
 			} else if val, ok := volMap["branchId"].(float64); ok {
 				volunteer.BranchID = uint(val)
+			} else if val, ok := volMap["branch_code"].(string); ok && val != "" {
+				// Also check for branch_code field directly
+				var branch models.Branch
+				if err := config.DB.Where("branch_code = ?", val).First(&branch).Error; err == nil {
+					volunteer.BranchID = branch.ID
+				}
 			}
 
 			if val, ok := volMap["name"].(string); ok {

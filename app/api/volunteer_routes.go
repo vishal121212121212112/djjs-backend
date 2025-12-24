@@ -13,6 +13,7 @@ func SetupVolunteerRoutes(r *gin.RouterGroup) {
 	{
 		volunteers.POST("", handlers.CreateVolunteerHandler)
 		volunteers.GET("", handlers.GetAllVolunteersHandler)
+		volunteers.GET("/search", handlers.SearchVolunteersHandler)
 		volunteers.PUT("/:id", middleware.ValidateVolunteerMiddleware(), handlers.UpdateVolunteerHandler)
 		volunteers.DELETE("/:id", middleware.ValidateVolunteerMiddleware(), handlers.DeleteVolunteerHandler)
 	}

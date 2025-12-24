@@ -92,3 +92,22 @@ func DeleteVolunteer(id uint) error {
 	}
 	return nil
 }
+
+// SearchVolunteers searches volunteers by name or contact number
+func SearchVolunteers(searchTerm string) ([]models.Volunteer, error) {
+	var volunteers []models.Volunteer
+	
+	// Search in volunteer_name or contact fields
+	query := config.DB.Where(
+		"volunteer_name ILIKE ? OR contact ILIKE ?",
+		"%"+searchTerm+"%",
+		"%"+searchTerm+"%",
+	).Preload("Branch")
+	
+	// Limit results to 20 for autocomplete suggestions
+	if err := query.Limit(20).Find(&volunteers).Error; err != nil {
+		return nil, err
+	}
+	
+	return volunteers, nil
+}

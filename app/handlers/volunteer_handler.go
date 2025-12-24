@@ -168,6 +168,32 @@ func DeleteVolunteerHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "volunteer deleted"})
 }
 
+// SearchVolunteersHandler searches volunteers by name or contact
+// @Summary Search volunteers
+// @Tags Volunteers
+// @Security ApiKeyAuth
+// @Produce json
+// @Param search query string true "Search term (name or contact)"
+// @Success 200 {array} models.Volunteer
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/volunteers/search [get]
+func SearchVolunteersHandler(c *gin.Context) {
+	searchTerm := c.Query("search")
+	if searchTerm == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "search parameter is required"})
+		return
+	}
+
+	volunteers, err := services.SearchVolunteers(searchTerm)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, volunteers)
+}
+
 func sanitizeVolunteerUpdates(payload map[string]interface{}) map[string]interface{} {
 	allowed := map[string]struct{}{
 		"volunteer_name": {},
