@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -33,6 +34,8 @@ type UploadResult struct {
 }
 
 // InitializeS3 initializes the S3 client and uploader with credentials
+// This function forces the use of static credentials from .env and prevents
+// fallback to IAM role credentials (which would use temporary ASIA keys)
 func InitializeS3() error {
 	// Get credentials from environment variables
 	accessKeyID := os.Getenv("AWS_ACCESS_KEY_ID")
@@ -54,24 +57,85 @@ func InitializeS3() error {
 		return fmt.Errorf("AWS_REGION environment variable is required")
 	}
 
-	// Create AWS config with static credentials
+	// CRITICAL: Unset temporary credential environment variables
+	// These are set when IAM roles are used and would cause the SDK to use
+	// temporary credentials (ASIA keys) instead of our static credentials (AKIA keys)
+	tempCredVars := []string{
+		"AWS_SESSION_TOKEN",
+		"AWS_SECURITY_TOKEN",
+		"AWS_ROLE_ARN",
+		"AWS_WEB_IDENTITY_TOKEN_FILE",
+	}
+
+	for _, envVar := range tempCredVars {
+		if val := os.Getenv(envVar); val != "" {
+			os.Unsetenv(envVar)
+			log.Printf("S3 Init: Unset %s to prevent IAM role credential fallback", envVar)
+		}
+	}
+
+	// Create static credentials provider - explicitly force .env credentials
+	credsProvider := credentials.NewStaticCredentialsProvider(
+		accessKeyID,
+		secretAccessKey,
+		"", // Explicitly empty session token - ensures permanent credentials
+	)
+
+	// Create AWS config with static credentials provider
+	// WithCredentialsProvider should prioritize our static credentials
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithRegion(region),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
-			accessKeyID,
-			secretAccessKey,
-			"",
-		)),
+		config.WithCredentialsProvider(credsProvider),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to load AWS config: %w", err)
 	}
 
-	// Create S3 client
+	// CRITICAL: Verify which credentials are actually being used
+	// This ensures we catch any credential chain fallback issues
+	actualCreds, err := cfg.Credentials.Retrieve(context.TODO())
+	if err != nil {
+		return fmt.Errorf("failed to retrieve credentials: %w", err)
+	}
+
+	// Mask credentials for logging (show first 8 characters only)
+	maskKey := func(key string) string {
+		if len(key) > 8 {
+			return key[:8] + "***"
+		}
+		return key + "***"
+	}
+
+	expectedMasked := maskKey(accessKeyID)
+	actualMasked := maskKey(actualCreds.AccessKeyID)
+
+	// Log credential verification for debugging
+	log.Printf("S3 Credentials Verification - Expected: %s, Actual: %s, Source: %s",
+		expectedMasked, actualMasked, actualCreds.Source)
+
+	// CRITICAL CHECK: Ensure we're using AKIA (permanent) not ASIA (temporary)
+	// ASIA prefix indicates temporary credentials from IAM roles
+	if !strings.HasPrefix(actualCreds.AccessKeyID, "AKIA") {
+		log.Printf("ERROR: Using temporary credentials (ASIA prefix) instead of permanent (AKIA prefix)")
+		log.Printf("Expected: %s, Got: %s", expectedMasked, actualMasked)
+		return fmt.Errorf("credentials error: SDK is using temporary credentials (ASIA) instead of static credentials (AKIA) from .env. This usually means IAM role credentials are being used")
+	}
+
+	// Verify access key matches exactly
+	if actualCreds.AccessKeyID != accessKeyID {
+		log.Printf("ERROR: Access Key mismatch detected!")
+		log.Printf("Expected: %s, Got: %s", expectedMasked, actualMasked)
+		return fmt.Errorf("credentials mismatch: SDK is using %s instead of %s from .env", actualMasked, expectedMasked)
+	}
+
+	// Credentials verified - create S3 client
 	S3Client = s3.NewFromConfig(cfg)
 	S3Uploader = manager.NewUploader(S3Client)
 	S3BucketName = bucketName
 	S3Region = region
+
+	log.Printf("S3 initialized successfully - Bucket: %s, Region: %s, Credentials: %s (verified)",
+		bucketName, region, expectedMasked)
 
 	return nil
 }
