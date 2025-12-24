@@ -131,6 +131,10 @@ func MapFrontendPayloadToEvent(generalDetails map[string]interface{}, involvedPa
 		event.SpiritualOrator = spiritualOrator
 	}
 
+	if language, ok := generalDetails["language"].(string); ok && language != "" {
+		event.Language = language
+	}
+
 	// Location fields - handle both direct fields and nested venue structure
 	var venue map[string]interface{}
 	if v, ok := generalDetails["venue"].(map[string]interface{}); ok {

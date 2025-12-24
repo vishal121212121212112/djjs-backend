@@ -8,8 +8,13 @@ import (
 	"github.com/followCode/djjs-event-reporting-backend/config"
 )
 
-// CreateChildBranch creates a new child branch
-func CreateChildBranch(childBranch *models.ChildBranch) error {
+// CreateChildBranch creates a new child branch (now using Branch model with parent_branch_id)
+func CreateChildBranch(childBranch *models.Branch) error {
+	// Ensure parent_branch_id is set (required for child branches)
+	if childBranch.ParentBranchID == nil || *childBranch.ParentBranchID == 0 {
+		return errors.New("parent_branch_id is required for child branches")
+	}
+	
 	childBranch.CreatedOn = time.Now()
 	if err := config.DB.Create(childBranch).Error; err != nil {
 		return err
@@ -17,11 +22,12 @@ func CreateChildBranch(childBranch *models.ChildBranch) error {
 	return nil
 }
 
-// GetAllChildBranches fetches all child branches
-func GetAllChildBranches() ([]models.ChildBranch, error) {
-	var childBranches []models.ChildBranch
+// GetAllChildBranches fetches all child branches (branches with parent_branch_id set)
+func GetAllChildBranches() ([]models.Branch, error) {
+	var childBranches []models.Branch
 	if err := config.DB.
-		Preload("ParentBranch").
+		Where("parent_branch_id IS NOT NULL").
+		Preload("Parent").
 		Preload("Country").
 		Preload("State").
 		Preload("District").
@@ -35,29 +41,30 @@ func GetAllChildBranches() ([]models.ChildBranch, error) {
 	return childBranches, nil
 }
 
-// GetChildBranch fetches a child branch by ID
-func GetChildBranch(childBranchID uint) (*models.ChildBranch, error) {
-	var childBranch models.ChildBranch
+// GetChildBranch fetches a child branch by ID (branch with parent_branch_id set)
+func GetChildBranch(childBranchID uint) (*models.Branch, error) {
+	var childBranch models.Branch
 	if err := config.DB.
-		Preload("ParentBranch").
+		Where("id = ? AND parent_branch_id IS NOT NULL", childBranchID).
+		Preload("Parent").
 		Preload("Country").
 		Preload("State").
 		Preload("District").
 		Preload("City").
 		Preload("Infrastructures").
 		Preload("Members").
-		First(&childBranch, childBranchID).Error; err != nil {
+		First(&childBranch).Error; err != nil {
 		return nil, errors.New("child branch not found")
 	}
 	return &childBranch, nil
 }
 
 // GetChildBranchesByParent fetches all child branches of a parent branch
-func GetChildBranchesByParent(parentBranchID uint) ([]models.ChildBranch, error) {
-	var childBranches []models.ChildBranch
+func GetChildBranchesByParent(parentBranchID uint) ([]models.Branch, error) {
+	var childBranches []models.Branch
 	if err := config.DB.
 		Where("parent_branch_id = ?", parentBranchID).
-		Preload("ParentBranch").
+		Preload("Parent").
 		Preload("Country").
 		Preload("State").
 		Preload("District").
@@ -73,8 +80,8 @@ func GetChildBranchesByParent(parentBranchID uint) ([]models.ChildBranch, error)
 
 // UpdateChildBranch updates a child branch
 func UpdateChildBranch(childBranchID uint, updatedData map[string]interface{}) error {
-	var childBranch models.ChildBranch
-	if err := config.DB.First(&childBranch, childBranchID).Error; err != nil {
+	var childBranch models.Branch
+	if err := config.DB.Where("id = ? AND parent_branch_id IS NOT NULL", childBranchID).First(&childBranch).Error; err != nil {
 		return errors.New("child branch not found")
 	}
 
@@ -145,16 +152,22 @@ func UpdateChildBranch(childBranchID uint, updatedData map[string]interface{}) e
 
 // DeleteChildBranch deletes a child branch by ID
 func DeleteChildBranch(childBranchID uint) error {
-	if err := config.DB.Delete(&models.ChildBranch{}, childBranchID).Error; err != nil {
+	// Only delete if it's actually a child branch (has parent_branch_id)
+	var childBranch models.Branch
+	if err := config.DB.Where("id = ? AND parent_branch_id IS NOT NULL", childBranchID).First(&childBranch).Error; err != nil {
+		return errors.New("child branch not found")
+	}
+	if err := config.DB.Delete(&childBranch).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
 // *************************************** Child Branch Infrastructure ****************************************************** //
+// Note: Child branch infrastructure now uses BranchInfrastructure model with branch_id
 
 // CreateChildBranchInfrastructure creates a new child branch infrastructure record
-func CreateChildBranchInfrastructure(infra *models.ChildBranchInfrastructure) error {
+func CreateChildBranchInfrastructure(infra *models.BranchInfrastructure) error {
 	infra.CreatedOn = time.Now()
 	if err := config.DB.Create(infra).Error; err != nil {
 		return err
@@ -163,9 +176,9 @@ func CreateChildBranchInfrastructure(infra *models.ChildBranchInfrastructure) er
 }
 
 // GetInfrastructureByChildBranch fetches infrastructure records by child branch ID
-func GetInfrastructureByChildBranch(childBranchID uint) ([]models.ChildBranchInfrastructure, error) {
-	var infra []models.ChildBranchInfrastructure
-	if err := config.DB.Where("child_branch_id = ?", childBranchID).Preload("ChildBranch").Find(&infra).Error; err != nil {
+func GetInfrastructureByChildBranch(childBranchID uint) ([]models.BranchInfrastructure, error) {
+	var infra []models.BranchInfrastructure
+	if err := config.DB.Where("branch_id = ?", childBranchID).Preload("Branch").Find(&infra).Error; err != nil {
 		return nil, err
 	}
 	return infra, nil
@@ -173,7 +186,7 @@ func GetInfrastructureByChildBranch(childBranchID uint) ([]models.ChildBranchInf
 
 // UpdateChildBranchInfrastructure updates a child branch infrastructure record
 func UpdateChildBranchInfrastructure(id uint, updatedData map[string]interface{}) error {
-	var infra models.ChildBranchInfrastructure
+	var infra models.BranchInfrastructure
 	if err := config.DB.First(&infra, id).Error; err != nil {
 		return errors.New("infrastructure not found")
 	}
@@ -189,16 +202,17 @@ func UpdateChildBranchInfrastructure(id uint, updatedData map[string]interface{}
 
 // DeleteChildBranchInfrastructure deletes a child branch infrastructure record
 func DeleteChildBranchInfrastructure(id uint) error {
-	if err := config.DB.Delete(&models.ChildBranchInfrastructure{}, id).Error; err != nil {
+	if err := config.DB.Delete(&models.BranchInfrastructure{}, id).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
 // *************************************** Child Branch Member ****************************************************** //
+// Note: Child branch members now use BranchMember model with branch_id
 
 // CreateChildBranchMember creates a new child branch member
-func CreateChildBranchMember(member *models.ChildBranchMember) error {
+func CreateChildBranchMember(member *models.BranchMember) error {
 	member.CreatedOn = time.Now()
 	if err := config.DB.Create(member).Error; err != nil {
 		return err
@@ -207,9 +221,9 @@ func CreateChildBranchMember(member *models.ChildBranchMember) error {
 }
 
 // GetMembersByChildBranch fetches all members of a child branch
-func GetMembersByChildBranch(childBranchID uint) ([]models.ChildBranchMember, error) {
-	var members []models.ChildBranchMember
-	if err := config.DB.Where("child_branch_id = ?", childBranchID).Preload("ChildBranch").Find(&members).Error; err != nil {
+func GetMembersByChildBranch(childBranchID uint) ([]models.BranchMember, error) {
+	var members []models.BranchMember
+	if err := config.DB.Where("branch_id = ?", childBranchID).Preload("Branch").Find(&members).Error; err != nil {
 		return nil, err
 	}
 	return members, nil
@@ -217,7 +231,7 @@ func GetMembersByChildBranch(childBranchID uint) ([]models.ChildBranchMember, er
 
 // UpdateChildBranchMember updates a child branch member
 func UpdateChildBranchMember(memberID uint, updatedData map[string]interface{}) error {
-	var member models.ChildBranchMember
+	var member models.BranchMember
 	if err := config.DB.First(&member, memberID).Error; err != nil {
 		return errors.New("member not found")
 	}
@@ -233,7 +247,7 @@ func UpdateChildBranchMember(memberID uint, updatedData map[string]interface{}) 
 
 // DeleteChildBranchMember deletes a child branch member
 func DeleteChildBranchMember(memberID uint) error {
-	if err := config.DB.Delete(&models.ChildBranchMember{}, memberID).Error; err != nil {
+	if err := config.DB.Delete(&models.BranchMember{}, memberID).Error; err != nil {
 		return err
 	}
 	return nil

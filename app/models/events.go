@@ -149,6 +149,7 @@ type EventDetails struct {
 	DailyStartTime  *TimeOnly  `gorm:"type:time" json:"daily_start_time,omitempty"`
 	DailyEndTime    *TimeOnly  `gorm:"type:time" json:"daily_end_time,omitempty"`
 	SpiritualOrator string     `json:"spiritual_orator,omitempty"`
+	Language        string     `json:"language,omitempty"`
 
 	Country    string `json:"country,omitempty"`
 	State      string `json:"state,omitempty"`

@@ -28,11 +28,11 @@ func GetAllBranchMedia() ([]models.BranchMedia, error) {
 }
 
 // GetBranchMediaByBranchID retrieves all BranchMedia records by BranchID
-func GetBranchMediaByBranchID(branchID uint, isChildBranch bool) ([]models.BranchMedia, error) {
+func GetBranchMediaByBranchID(branchID uint) ([]models.BranchMedia, error) {
 	var mediaList []models.BranchMedia
 	if err := config.DB.
 		Preload("Branch").
-		Where("branch_id = ? AND is_child_branch = ?", branchID, isChildBranch).
+		Where("branch_id = ?", branchID).
 		Find(&mediaList).Error; err != nil {
 		return nil, errors.New("no branch media found for the given branch ID")
 	}

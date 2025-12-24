@@ -11,12 +11,11 @@ import (
 
 // GetBranchMediaByBranchIDHandler godoc
 // @Summary Get Branch Media by Branch ID
-// @Description Get all Branch Media records for a specific Branch ID
+// @Description Get all Branch Media records for a specific Branch ID (works for both branches and child branches)
 // @Tags BranchMedia
 // @Security ApiKeyAuth
 // @Produce json
 // @Param branch_id path int true "Branch ID"
-// @Param is_child_branch query bool false "Whether this is a child branch (default: false)"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Router /api/branch-media/branch/{branch_id} [get]
@@ -28,13 +27,7 @@ func GetBranchMediaByBranchIDHandler(c *gin.Context) {
 		return
 	}
 
-	isChildBranch := false
-	isChildBranchStr := c.Query("is_child_branch")
-	if isChildBranchStr == "true" {
-		isChildBranch = true
-	}
-
-	mediaList, err := services.GetBranchMediaByBranchID(uint(branchID), isChildBranch)
+	mediaList, err := services.GetBranchMediaByBranchID(uint(branchID))
 	// Return empty array if no media found (not an error)
 	if err != nil {
 		mediaList = []models.BranchMedia{}

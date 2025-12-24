@@ -156,6 +156,25 @@ func GetAllEventsHandler(c *gin.Context) {
 			donations = []models.Donation{}
 		}
 
+		// Get branch from first volunteer or donation
+		var branchName string
+		var branchID uint
+		if len(volunteers) > 0 && volunteers[0].BranchID > 0 {
+			// Try to get branch from first volunteer
+			var branch models.Branch
+			if err := config.DB.First(&branch, volunteers[0].BranchID).Error; err == nil {
+				branchName = branch.Name
+				branchID = branch.ID
+			}
+		} else if len(donations) > 0 && donations[0].BranchID > 0 {
+			// Fallback to first donation's branch
+			var branch models.Branch
+			if err := config.DB.First(&branch, donations[0].BranchID).Error; err == nil {
+				branchName = branch.Name
+				branchID = branch.ID
+			}
+		}
+
 		// Convert event to map and add counts
 		eventMap := gin.H{
 			"id":                       event.ID,
@@ -168,6 +187,9 @@ func GetAllEventsHandler(c *gin.Context) {
 			"daily_start_time":         event.DailyStartTime,
 			"daily_end_time":           event.DailyEndTime,
 			"spiritual_orator":         event.SpiritualOrator,
+			"language":                 event.Language,
+			"branch":                   branchName,
+			"branch_id":                branchID,
 			"country":                  event.Country,
 			"state":                    event.State,
 			"city":                     event.City,
@@ -273,9 +295,30 @@ func GetEventByIdHandler(c *gin.Context) {
 		donations = []models.Donation{}
 	}
 
+	// Get branch from first volunteer or donation
+	var branchName string
+	var branchID uint
+	if len(volunteers) > 0 && volunteers[0].BranchID > 0 {
+		// Try to get branch from first volunteer
+		var branch models.Branch
+		if err := config.DB.First(&branch, volunteers[0].BranchID).Error; err == nil {
+			branchName = branch.Name
+			branchID = branch.ID
+		}
+	} else if len(donations) > 0 && donations[0].BranchID > 0 {
+		// Fallback to first donation's branch
+		var branch models.Branch
+		if err := config.DB.First(&branch, donations[0].BranchID).Error; err == nil {
+			branchName = branch.Name
+			branchID = branch.ID
+		}
+	}
+
 	// Build response with event and related data
 	response := gin.H{
 		"event":                  event,
+		"branch":                 branchName,
+		"branch_id":              branchID,
 		"specialGuests":          specialGuests,
 		"volunteers":             volunteers,
 		"media":                  mediaList,
@@ -393,6 +436,9 @@ func UpdateEventHandler(c *gin.Context) {
 		}
 		if event.SpiritualOrator != "" {
 			updateData["spiritual_orator"] = event.SpiritualOrator
+		}
+		if event.Language != "" {
+			updateData["language"] = event.Language
 		}
 		if event.Country != "" {
 			updateData["country"] = event.Country

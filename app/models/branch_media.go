@@ -8,7 +8,6 @@ import (
 type BranchMedia struct {
 	ID              uint      `gorm:"primaryKey" json:"id"`
 	BranchID        uint      `gorm:"not null" json:"branch_id"`
-	IsChildBranch   bool      `gorm:"default:false" json:"is_child_branch"`
 	FileURL         string    `json:"-" gorm:"column:file_url"` // Internal: NEVER serialize to JSON - stores presigned URL temporarily
 	S3Key           string    `json:"s3_key,omitempty" gorm:"column:s3_key"`   // Opaque S3 object key (UUID-based)
 	OriginalFilename string   `json:"original_filename,omitempty" gorm:"column:original_filename"` // Original filename from upload

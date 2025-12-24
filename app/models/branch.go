@@ -3,6 +3,10 @@ package models
 import "time"
 
 // swagger:model Branch
+// Branch represents both parent branches and child branches in a single table.
+// - Parent branches: parent_branch_id is NULL
+// - Child branches: parent_branch_id is set to the parent branch's ID
+// This unified model eliminates the need for a separate child_branch table.
 type Branch struct {
 	ID              uint       `gorm:"primaryKey;autoIncrement" json:"id"`
 	Name            string     `gorm:"not null" json:"name" validate:"required,min=2,max=255"`
@@ -29,7 +33,6 @@ type Branch struct {
 	ParentBranchID  *uint      `gorm:"column:parent_branch_id" json:"parent_branch_id,omitempty"`
 	Parent          *Branch    `gorm:"foreignKey:ParentBranchID" json:"parent,omitempty"`
 	Children        []Branch   `gorm:"foreignKey:ParentBranchID" json:"children,omitempty"`
-	ChildBranches   []ChildBranch `gorm:"foreignKey:ParentBranchID" json:"child_branches,omitempty"`
 	Infrastructures []BranchInfrastructure `gorm:"foreignKey:BranchID" json:"infrastructure,omitempty"`
 	Members         []BranchMember         `gorm:"foreignKey:BranchID" json:"branch_members,omitempty"`
 	Status          bool       `gorm:"default:true" json:"status"`

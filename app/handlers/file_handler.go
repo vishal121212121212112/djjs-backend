@@ -399,19 +399,23 @@ func DeleteFileHandler(c *gin.Context) {
 					})
 					return
 				}
-				// Validate is_child_branch if provided
-				isChildBranchStr := c.Query("is_child_branch")
-				if isChildBranchStr == "true" && !branchMedia.IsChildBranch {
-					c.JSON(http.StatusForbidden, gin.H{
-						"error": "file does not belong to a child branch",
-					})
-					return
-				}
-				if isChildBranchStr == "false" && branchMedia.IsChildBranch {
-					c.JSON(http.StatusForbidden, gin.H{
-						"error": "file does not belong to a main branch",
-					})
-					return
+				// Check if branch is a child branch (has parent_branch_id)
+				var branch models.Branch
+				if err := config.DB.Select("parent_branch_id").First(&branch, branchMedia.BranchID).Error; err == nil {
+					isChildBranchQuery := c.Query("is_child_branch")
+					isActuallyChildBranch := branch.ParentBranchID != nil
+					if isChildBranchQuery == "true" && !isActuallyChildBranch {
+						c.JSON(http.StatusForbidden, gin.H{
+							"error": "file does not belong to a child branch",
+						})
+						return
+					}
+					if isChildBranchQuery == "false" && isActuallyChildBranch {
+						c.JSON(http.StatusForbidden, gin.H{
+							"error": "file does not belong to a main branch",
+						})
+						return
+					}
 				}
 			}
 		}
@@ -698,14 +702,13 @@ func UploadMultipleFilesHandler(c *gin.Context) {
 
 // UploadBranchFilesHandler handles multiple file uploads to S3 for branches
 // @Summary Upload multiple files to S3 for branch
-// @Description Upload multiple image, video, audio, or PDF files to S3 and associate with branch media
+// @Description Upload multiple image, video, audio, or PDF files to S3 and associate with branch media (works for both branches and child branches)
 // @Tags Files
 // @Security ApiKeyAuth
 // @Accept multipart/form-data
 // @Produce json
 // @Param files formData file true "Files to upload (multiple files allowed)"
 // @Param branch_id formData int true "Branch ID"
-// @Param is_child_branch formData bool false "Whether this is a child branch (default: false)"
 // @Param category formData string false "File category (Branch Photos, Video Coverage, Documents, Other)"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
@@ -724,12 +727,13 @@ func UploadBranchFilesHandler(c *gin.Context) {
 		return
 	}
 
-	// Get is_child_branch flag
-	isChildBranch := false
-	isChildBranchStr := c.PostForm("is_child_branch")
-	if isChildBranchStr == "true" {
-		isChildBranch = true
+	// Check if branch is a child branch by checking parent_branch_id
+	var branch models.Branch
+	if err := config.DB.Select("parent_branch_id").First(&branch, branchID).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "branch not found"})
+		return
 	}
+	isChildBranch := branch.ParentBranchID != nil
 
 	// Get category
 	category := c.PostForm("category")
@@ -869,8 +873,7 @@ func UploadBranchFilesHandler(c *gin.Context) {
 
 		// Create BranchMedia record
 		media := models.BranchMedia{
-			BranchID:      uint(branchID),
-			IsChildBranch: isChildBranch,
+			BranchID: uint(branchID),
 			// DO NOT store raw S3 URLs - all access must use presigned URLs
 			// FileURL is deprecated - leave empty to prevent raw URL usage
 			FileType: fileType,
