@@ -113,19 +113,20 @@ func InitializeS3() error {
 	log.Printf("S3 Credentials Verification - Expected: %s, Actual: %s, Source: %s",
 		expectedMasked, actualMasked, actualCreds.Source)
 
-	// CRITICAL CHECK: Ensure we're using AKIA (permanent) not ASIA (temporary)
-	// ASIA prefix indicates temporary credentials from IAM roles
-	if !strings.HasPrefix(actualCreds.AccessKeyID, "AKIA") {
-		log.Printf("ERROR: Using temporary credentials (ASIA prefix) instead of permanent (AKIA prefix)")
-		log.Printf("Expected: %s, Got: %s", expectedMasked, actualMasked)
-		return fmt.Errorf("credentials error: SDK is using temporary credentials (ASIA) instead of static credentials (AKIA) from .env. This usually means IAM role credentials are being used")
-	}
-
-	// Verify access key matches exactly
+	// Verify access key matches exactly - this is the critical check
+	// Allow both AKIA (permanent) and ASIA (temporary) credentials if explicitly set in environment
 	if actualCreds.AccessKeyID != accessKeyID {
 		log.Printf("ERROR: Access Key mismatch detected!")
 		log.Printf("Expected: %s, Got: %s", expectedMasked, actualMasked)
 		return fmt.Errorf("credentials mismatch: SDK is using %s instead of %s from .env", actualMasked, expectedMasked)
+	}
+
+	// Warn if using temporary credentials (ASIA) - but allow them if explicitly set in environment
+	if !strings.HasPrefix(actualCreds.AccessKeyID, "AKIA") {
+		log.Printf("WARNING: Using temporary credentials (ASIA prefix) instead of permanent (AKIA prefix)")
+		log.Printf("WARNING: Temporary credentials will expire and may cause authentication failures")
+		log.Printf("WARNING: Consider using permanent credentials (AKIA prefix) for production")
+		// Don't return error - allow temporary credentials if explicitly set in environment
 	}
 
 	// Credentials verified - create S3 client

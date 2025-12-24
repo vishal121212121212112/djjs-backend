@@ -133,6 +133,8 @@ func GetAllEventsHandler(c *gin.Context) {
 		// Convert to presigned URLs - HARD GUARD: fail fast if S3Key is empty
 		mediaListWithPresignedURLs, err := services.ConvertEventMediaToPresignedURLs(c.Request.Context(), mediaList)
 		if err != nil {
+			// Log the error for debugging
+			log.Printf("ERROR: Failed to generate presigned URLs for event %d: %v", event.ID, err)
 			// Fail fast - return HTTP 500 with structured error
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":   "failed to generate presigned URLs for event media",
@@ -532,13 +534,13 @@ func DeleteEventHandler(c *gin.Context) {
 // ----------------------------------------------------
 
 // DownloadEventHandler godoc
-// @Summary Download event data as PDF/JSON
-// @Description Downloads event data in a downloadable format (JSON for now, PDF can be added later)
+// @Summary Download event data as PDF
+// @Description Downloads event data as a PDF document
 // @Tags Events
 // @Security ApiKeyAuth
-// @Produce application/json
+// @Produce application/pdf
 // @Param event_id path int true "Event ID"
-// @Success 200 {file} file "Event data file"
+// @Success 200 {file} file "Event data PDF file"
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
@@ -576,21 +578,17 @@ func DownloadEventHandler(c *gin.Context) {
 	promotionMaterials, _ := services.GetPromotionMaterialDetailsByEventID(uint(eventID))
 	donations, _ := services.GetDonationsByEvent(uint(eventID))
 
-	// Build complete event data with all related information
-	eventData := gin.H{
-		"event":              event,
-		"specialGuests":      specialGuests,
-		"volunteers":         volunteers,
-		"media":              mediaList,
-		"promotionMaterials": promotionMaterials,
-		"donations":          donations,
+	// Generate PDF document
+	pdfBytes, err := services.GenerateEventPDF(event, specialGuests, volunteers, mediaList, promotionMaterials, donations)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate PDF: " + err.Error()})
+		return
 	}
 
-	// TODO: Generate PDF or return JSON
-	// For now, return JSON with proper headers for download
-	c.Header("Content-Type", "application/json")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=event_%d_%s.json", eventID, time.Now().Format("20060102_150405")))
-	c.JSON(http.StatusOK, eventData)
+	// Set headers for PDF file download
+	c.Header("Content-Type", "application/pdf")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=event_%d_%s.pdf", eventID, time.Now().Format("20060102_150405")))
+	c.Data(http.StatusOK, "application/pdf", pdfBytes)
 }
 
 // ----------------------------------------------------
