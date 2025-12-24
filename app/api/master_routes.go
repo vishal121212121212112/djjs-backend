@@ -28,6 +28,7 @@ func SetupMasterRoutes(r *gin.RouterGroup) {
 		master.GET("/event-sub-categories", handlers.GetAllEventSubCategoriesHandler)
 		master.GET("/event-sub-categories/by-category", handlers.GetEventSubCategoriesByCategoryHandler)
 		master.GET("/roles", handlers.GetAllRolesHandler)
+		master.GET("/themes", handlers.GetAllThemesHandler)
 	}
 }
 

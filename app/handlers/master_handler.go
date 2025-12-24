@@ -395,3 +395,23 @@ func GetAllRolesHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, roles)
 }
+
+// --------------------- Themes ---------------------
+
+// GetAllThemesHandler godoc
+// @Summary Get all themes
+// @Description Returns a list of all themes
+// @Tags Themes
+// @Security ApiKeyAuth
+// @Produce json
+// @Success 200 {array} models.Theme
+// @Failure 500 {object} map[string]string
+// @Router /api/themes [get]
+func GetAllThemesHandler(c *gin.Context) {
+	themes, err := services.GetAllThemesService()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, themes)
+}

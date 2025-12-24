@@ -46,3 +46,10 @@ type SevaType struct {
 	CreatedOn   time.Time  `gorm:"autoCreateTime" json:"created_on,omitempty"`
 	UpdatedOn   *time.Time `gorm:"autoUpdateTime" json:"updated_on,omitempty"`
 }
+
+type Theme struct {
+	ID        uint       `gorm:"primaryKey" json:"id"`
+	Name      string     `json:"name"`
+	CreatedOn time.Time  `gorm:"autoCreateTime" json:"created_on,omitempty"`
+	UpdatedOn *time.Time `gorm:"autoUpdateTime" json:"updated_on,omitempty"`
+}

@@ -193,3 +193,12 @@ func GetAllRolesService() ([]models.Role, error) {
 	}
 	return roles, nil
 }
+
+// GetAllThemesService returns all themes
+func GetAllThemesService() ([]models.Theme, error) {
+	var themes []models.Theme
+	if err := config.DB.Order("name ASC").Find(&themes).Error; err != nil {
+		return nil, err
+	}
+	return themes, nil
+}
