@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/followCode/djjs-event-reporting-backend/app/models"
@@ -533,6 +534,124 @@ func UpdateBranchHandler(c *gin.Context) {
 		delete(payload, "branch_members")
 	}
 
+	// Remove fields that should not be updated or are set automatically
+	delete(payload, "updated_on") // Service sets this automatically
+	delete(payload, "id")         // Should not be updated
+	delete(payload, "created_on") // Should not be updated
+	delete(payload, "created_by") // Should not be updated
+
+	// Handle empty strings - convert to nil for optional fields
+	// Email: if empty string, remove it (don't update) or set to nil if explicitly clearing
+	if email, ok := payload["email"]; ok {
+		if emailStr, ok := email.(string); ok && strings.TrimSpace(emailStr) == "" {
+			delete(payload, "email") // Remove empty email, don't update it
+		}
+	}
+
+	// Contact number: if empty string, remove it (don't update)
+	if contactNumber, ok := payload["contact_number"]; ok {
+		if contactStr, ok := contactNumber.(string); ok && strings.TrimSpace(contactStr) == "" {
+			delete(payload, "contact_number") // Remove empty contact, don't update it
+		}
+	}
+
+	// Handle empty strings for location IDs - convert to nil
+	if countryID, ok := payload["country_id"]; ok {
+		if countryID == nil {
+			payload["country_id"] = nil
+		} else if countryIDStr, okStr := countryID.(string); okStr && strings.TrimSpace(countryIDStr) == "" {
+			payload["country_id"] = nil
+		}
+	}
+	if stateID, ok := payload["state_id"]; ok {
+		if stateID == nil {
+			payload["state_id"] = nil
+		} else if stateIDStr, okStr := stateID.(string); okStr && strings.TrimSpace(stateIDStr) == "" {
+			payload["state_id"] = nil
+		}
+	}
+	if districtID, ok := payload["district_id"]; ok {
+		if districtID == nil {
+			payload["district_id"] = nil
+		} else if districtIDStr, okStr := districtID.(string); okStr && strings.TrimSpace(districtIDStr) == "" {
+			payload["district_id"] = nil
+		}
+	}
+	if cityID, ok := payload["city_id"]; ok {
+		if cityID == nil {
+			payload["city_id"] = nil
+		} else if cityIDStr, okStr := cityID.(string); okStr && strings.TrimSpace(cityIDStr) == "" {
+			payload["city_id"] = nil
+		}
+	}
+	if regionID, ok := payload["region_id"]; ok {
+		if regionID == nil {
+			payload["region_id"] = nil
+		} else if regionIDStr, okStr := regionID.(string); okStr && strings.TrimSpace(regionIDStr) == "" {
+			payload["region_id"] = nil
+		}
+	}
+
+	// Process location fields (support both old format - strings, and new format - IDs)
+	// Handle country - support both old format (string) and new format (number)
+	if country, ok := payload["country"]; ok && payload["country_id"] == nil {
+		delete(payload, "country")
+		if countryID, err := parseLocationID(country, "country"); err == nil && countryID > 0 {
+			payload["country_id"] = countryID
+		}
+	}
+	// Handle state - support both old format (string) and new format (number)
+	if state, ok := payload["state"]; ok && payload["state_id"] == nil {
+		delete(payload, "state")
+		if stateID, err := parseLocationID(state, "state"); err == nil && stateID > 0 {
+			payload["state_id"] = stateID
+		}
+	}
+	// Handle district - support both old format (string) and new format (number)
+	if district, ok := payload["district"]; ok && payload["district_id"] == nil {
+		delete(payload, "district")
+		if districtID, err := parseLocationID(district, "district"); err == nil && districtID > 0 {
+			payload["district_id"] = districtID
+		}
+	}
+	// Handle city - support both old format (string) and new format (number)
+	if city, ok := payload["city"]; ok && payload["city_id"] == nil {
+		delete(payload, "city")
+		if cityID, err := parseLocationID(city, "city"); err == nil && cityID > 0 {
+			payload["city_id"] = cityID
+		}
+	}
+
+	// Handle parent_branch_id in different formats
+	if parentBranch, ok := payload["parent_branch_id"]; ok {
+		if pb, err := parseID(parentBranch); err == nil && pb > 0 {
+			payload["parent_branch_id"] = pb
+		} else if pb == 0 {
+			// Allow setting to null/0 to remove parent relationship
+			payload["parent_branch_id"] = nil
+		}
+	}
+
+	// Parse established_on date if provided as string
+	if establishedOn, ok := payload["established_on"]; ok {
+		if dateStr, ok := establishedOn.(string); ok {
+			if strings.TrimSpace(dateStr) == "" {
+				// Empty string means clear the date
+				payload["established_on"] = nil
+			} else {
+				if parsedTime, err := parseTime(dateStr); err == nil && !parsedTime.IsZero() {
+					payload["established_on"] = &parsedTime
+				} else {
+					// If parsing fails or returns zero time, remove it to avoid database error
+					delete(payload, "established_on")
+				}
+			}
+		} else if establishedOn == nil {
+			// Allow setting to null to clear the date
+			payload["established_on"] = nil
+		}
+	}
+
 	// Validate remaining branch update fields
 	if err := validators.ValidateBranchUpdateFields(payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -652,7 +771,10 @@ func UpdateBranchHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, branch)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Branch updated successfully",
+		"branch":  branch,
+	})
 }
 
 // DeleteBranchHandler godoc

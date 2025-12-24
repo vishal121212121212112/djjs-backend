@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/followCode/djjs-event-reporting-backend/app/models"
@@ -198,19 +199,23 @@ func UpdateBranch(branchID uint, updatedData map[string]interface{}) error {
 		return errors.New("branch not found")
 	}
 
-	// Check email uniqueness if email is being updated
-	if email, ok := updatedData["email"]; ok {
-		var existingBranch models.Branch
-		if err := config.DB.Where("email = ? AND id != ?", email, branchID).First(&existingBranch).Error; err == nil {
-			return errors.New("email already exists")
+	// Check email uniqueness if email is being updated (skip if empty or nil)
+	if email, ok := updatedData["email"]; ok && email != nil {
+		if emailStr, ok := email.(string); ok && strings.TrimSpace(emailStr) != "" {
+			var existingBranch models.Branch
+			if err := config.DB.Where("email = ? AND id != ?", emailStr, branchID).First(&existingBranch).Error; err == nil {
+				return errors.New("email already exists")
+			}
 		}
 	}
 
-	// Check contact number uniqueness if being updated
-	if contactNumber, ok := updatedData["contact_number"]; ok {
-		var existingBranch models.Branch
-		if err := config.DB.Where("contact_number = ? AND id != ?", contactNumber, branchID).First(&existingBranch).Error; err == nil {
-			return errors.New("contact number already exists")
+	// Check contact number uniqueness if being updated (skip if empty or nil)
+	if contactNumber, ok := updatedData["contact_number"]; ok && contactNumber != nil {
+		if contactStr, ok := contactNumber.(string); ok && strings.TrimSpace(contactStr) != "" {
+			var existingBranch models.Branch
+			if err := config.DB.Where("contact_number = ? AND id != ?", contactStr, branchID).First(&existingBranch).Error; err == nil {
+				return errors.New("contact number already exists")
+			}
 		}
 	}
 
@@ -226,152 +231,220 @@ func UpdateBranch(branchID uint, updatedData map[string]interface{}) error {
 
 	// Validate Country ID if being updated
 	if countryID, ok := updatedData["country_id"]; ok {
-		var countryIDVal uint
-		switch v := countryID.(type) {
-		case float64:
-			countryIDVal = uint(v)
-		case uint:
-			countryIDVal = v
-		case int:
-			countryIDVal = uint(v)
-		default:
-			return errors.New("invalid country_id type")
-		}
-		if countryIDVal > 0 {
-			var country models.Country
-			if err := config.DB.First(&country, countryIDVal).Error; err != nil {
-				return errors.New("invalid country_id")
+		// Allow nil to clear the country_id
+		if countryID == nil {
+			// Set to nil to clear the relationship
+			updatedData["country_id"] = nil
+		} else {
+			var countryIDVal uint
+			switch v := countryID.(type) {
+			case float64:
+				countryIDVal = uint(v)
+			case uint:
+				countryIDVal = v
+			case int:
+				countryIDVal = uint(v)
+			case *uint:
+				if v == nil {
+					updatedData["country_id"] = nil
+					countryIDVal = 0
+				} else {
+					countryIDVal = *v
+				}
+			default:
+				return errors.New("invalid country_id type")
+			}
+			if countryIDVal > 0 {
+				var country models.Country
+				if err := config.DB.First(&country, countryIDVal).Error; err != nil {
+					return errors.New("invalid country_id")
+				}
 			}
 		}
 	}
 
 	// Validate State ID if being updated
 	if stateID, ok := updatedData["state_id"]; ok {
-		var stateIDVal uint
-		switch v := stateID.(type) {
-		case float64:
-			stateIDVal = uint(v)
-		case uint:
-			stateIDVal = v
-		case int:
-			stateIDVal = uint(v)
-		default:
-			return errors.New("invalid state_id type")
-		}
-		if stateIDVal > 0 {
-			var state models.State
-			if err := config.DB.First(&state, stateIDVal).Error; err != nil {
-				return errors.New("invalid state_id")
+		// Allow nil to clear the state_id
+		if stateID == nil {
+			// Set to nil to clear the relationship
+			updatedData["state_id"] = nil
+		} else {
+			var stateIDVal uint
+			switch v := stateID.(type) {
+			case float64:
+				stateIDVal = uint(v)
+			case uint:
+				stateIDVal = v
+			case int:
+				stateIDVal = uint(v)
+			case *uint:
+				if v == nil {
+					updatedData["state_id"] = nil
+					stateIDVal = 0
+				} else {
+					stateIDVal = *v
+				}
+			default:
+				return errors.New("invalid state_id type")
 			}
-			// Validate state belongs to country if country_id is also being updated or already set
-			if countryID, ok := updatedData["country_id"]; ok {
-				var countryIDVal uint
-				switch v := countryID.(type) {
-				case float64:
-					countryIDVal = uint(v)
-				case uint:
-					countryIDVal = v
-				case int:
-					countryIDVal = uint(v)
+			if stateIDVal > 0 {
+				var state models.State
+				if err := config.DB.First(&state, stateIDVal).Error; err != nil {
+					return errors.New("invalid state_id")
 				}
-				if countryIDVal > 0 && state.CountryID != countryIDVal {
-					return errors.New("state does not belong to the specified country")
+				// Validate state belongs to country if country_id is also being updated or already set
+				if countryID, ok := updatedData["country_id"]; ok && countryID != nil {
+					var countryIDVal uint
+					switch v := countryID.(type) {
+					case float64:
+						countryIDVal = uint(v)
+					case uint:
+						countryIDVal = v
+					case int:
+						countryIDVal = uint(v)
+					case *uint:
+						if v != nil {
+							countryIDVal = *v
+						}
+					}
+					if countryIDVal > 0 && state.CountryID != countryIDVal {
+						return errors.New("state does not belong to the specified country")
+					}
+				} else if branch.CountryID != nil && *branch.CountryID > 0 && state.CountryID != *branch.CountryID {
+					return errors.New("state does not belong to the branch's country")
 				}
-			} else if branch.CountryID != nil && *branch.CountryID > 0 && state.CountryID != *branch.CountryID {
-				return errors.New("state does not belong to the branch's country")
 			}
 		}
 	}
 
 	// Validate District ID if being updated
 	if districtID, ok := updatedData["district_id"]; ok {
-		var districtIDVal uint
-		switch v := districtID.(type) {
-		case float64:
-			districtIDVal = uint(v)
-		case uint:
-			districtIDVal = v
-		case int:
-			districtIDVal = uint(v)
-		default:
-			return errors.New("invalid district_id type")
-		}
-		if districtIDVal > 0 {
-			var district models.District
-			if err := config.DB.First(&district, districtIDVal).Error; err != nil {
-				return errors.New("invalid district_id")
+		// Allow nil to clear the district_id
+		if districtID == nil {
+			// Set to nil to clear the relationship
+			updatedData["district_id"] = nil
+		} else {
+			var districtIDVal uint
+			switch v := districtID.(type) {
+			case float64:
+				districtIDVal = uint(v)
+			case uint:
+				districtIDVal = v
+			case int:
+				districtIDVal = uint(v)
+			case *uint:
+				if v == nil {
+					updatedData["district_id"] = nil
+					districtIDVal = 0
+				} else {
+					districtIDVal = *v
+				}
+			default:
+				return errors.New("invalid district_id type")
 			}
-			// Validate district belongs to state if state_id is also being updated or already set
-			if stateID, ok := updatedData["state_id"]; ok {
-				var stateIDVal uint
-				switch v := stateID.(type) {
-				case float64:
-					stateIDVal = uint(v)
-				case uint:
-					stateIDVal = v
-				case int:
-					stateIDVal = uint(v)
+			if districtIDVal > 0 {
+				var district models.District
+				if err := config.DB.First(&district, districtIDVal).Error; err != nil {
+					return errors.New("invalid district_id")
 				}
-				if stateIDVal > 0 && district.StateID != stateIDVal {
-					return errors.New("district does not belong to the specified state")
+				// Validate district belongs to state if state_id is also being updated or already set
+				if stateID, ok := updatedData["state_id"]; ok && stateID != nil {
+					var stateIDVal uint
+					switch v := stateID.(type) {
+					case float64:
+						stateIDVal = uint(v)
+					case uint:
+						stateIDVal = v
+					case int:
+						stateIDVal = uint(v)
+					case *uint:
+						if v != nil {
+							stateIDVal = *v
+						}
+					}
+					if stateIDVal > 0 && district.StateID != stateIDVal {
+						return errors.New("district does not belong to the specified state")
+					}
+				} else if branch.StateID != nil && *branch.StateID > 0 && district.StateID != *branch.StateID {
+					return errors.New("district does not belong to the branch's state")
 				}
-			} else if branch.StateID != nil && *branch.StateID > 0 && district.StateID != *branch.StateID {
-				return errors.New("district does not belong to the branch's state")
-			}
-			// Validate district belongs to country
-			if countryID, ok := updatedData["country_id"]; ok {
-				var countryIDVal uint
-				switch v := countryID.(type) {
-				case float64:
-					countryIDVal = uint(v)
-				case uint:
-					countryIDVal = v
-				case int:
-					countryIDVal = uint(v)
+				// Validate district belongs to country
+				if countryID, ok := updatedData["country_id"]; ok && countryID != nil {
+					var countryIDVal uint
+					switch v := countryID.(type) {
+					case float64:
+						countryIDVal = uint(v)
+					case uint:
+						countryIDVal = v
+					case int:
+						countryIDVal = uint(v)
+					case *uint:
+						if v != nil {
+							countryIDVal = *v
+						}
+					}
+					if countryIDVal > 0 && district.CountryID != countryIDVal {
+						return errors.New("district does not belong to the specified country")
+					}
+				} else if branch.CountryID != nil && *branch.CountryID > 0 && district.CountryID != *branch.CountryID {
+					return errors.New("district does not belong to the branch's country")
 				}
-				if countryIDVal > 0 && district.CountryID != countryIDVal {
-					return errors.New("district does not belong to the specified country")
-				}
-			} else if branch.CountryID != nil && *branch.CountryID > 0 && district.CountryID != *branch.CountryID {
-				return errors.New("district does not belong to the branch's country")
 			}
 		}
 	}
 
 	// Validate City ID if being updated
 	if cityID, ok := updatedData["city_id"]; ok {
-		var cityIDVal uint
-		switch v := cityID.(type) {
-		case float64:
-			cityIDVal = uint(v)
-		case uint:
-			cityIDVal = v
-		case int:
-			cityIDVal = uint(v)
-		default:
-			return errors.New("invalid city_id type")
-		}
-		if cityIDVal > 0 {
-			var city models.City
-			if err := config.DB.First(&city, cityIDVal).Error; err != nil {
-				return errors.New("invalid city_id")
+		// Allow nil to clear the city_id
+		if cityID == nil {
+			// Set to nil to clear the relationship
+			updatedData["city_id"] = nil
+		} else {
+			var cityIDVal uint
+			switch v := cityID.(type) {
+			case float64:
+				cityIDVal = uint(v)
+			case uint:
+				cityIDVal = v
+			case int:
+				cityIDVal = uint(v)
+			case *uint:
+				if v == nil {
+					updatedData["city_id"] = nil
+					cityIDVal = 0
+				} else {
+					cityIDVal = *v
+				}
+			default:
+				return errors.New("invalid city_id type")
 			}
-			// Validate city belongs to state if state_id is also being updated or already set
-			if stateID, ok := updatedData["state_id"]; ok {
-				var stateIDVal uint
-				switch v := stateID.(type) {
-				case float64:
-					stateIDVal = uint(v)
-				case uint:
-					stateIDVal = v
-				case int:
-					stateIDVal = uint(v)
+			if cityIDVal > 0 {
+				var city models.City
+				if err := config.DB.First(&city, cityIDVal).Error; err != nil {
+					return errors.New("invalid city_id")
 				}
-				if stateIDVal > 0 && city.StateID != stateIDVal {
-					return errors.New("city does not belong to the specified state")
+				// Validate city belongs to state if state_id is also being updated or already set
+				if stateID, ok := updatedData["state_id"]; ok && stateID != nil {
+					var stateIDVal uint
+					switch v := stateID.(type) {
+					case float64:
+						stateIDVal = uint(v)
+					case uint:
+						stateIDVal = v
+					case int:
+						stateIDVal = uint(v)
+					case *uint:
+						if v != nil {
+							stateIDVal = *v
+						}
+					}
+					if stateIDVal > 0 && city.StateID != stateIDVal {
+						return errors.New("city does not belong to the specified state")
+					}
+				} else if branch.StateID != nil && *branch.StateID > 0 && city.StateID != *branch.StateID {
+					return errors.New("city does not belong to the branch's state")
 				}
-			} else if branch.StateID != nil && *branch.StateID > 0 && city.StateID != *branch.StateID {
-				return errors.New("city does not belong to the branch's state")
 			}
 		}
 	}
