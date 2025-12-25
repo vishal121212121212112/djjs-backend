@@ -78,9 +78,9 @@ func CreateEventHandler(c *gin.Context) {
 		log.Printf("Warning: Failed to create related data: %v", err)
 	}
 
-	// Delete draft ONLY after successful event creation (submit)
+	// Delete draft ONLY after successful event creation with status='complete' (submit)
 	// This ensures draft is kept if user just saves as draft, and deleted only when submitting
-	if frontendPayload.DraftID != nil && *frontendPayload.DraftID > 0 {
+	if frontendPayload.DraftID != nil && *frontendPayload.DraftID > 0 && frontendPayload.Status == "complete" {
 		_ = services.DeleteDraft(*frontendPayload.DraftID)
 	}
 
@@ -500,8 +500,9 @@ func UpdateEventHandler(c *gin.Context) {
 			log.Printf("Warning: Failed to update related data: %v", err)
 		}
 
-		// Delete draft if provided
-		if frontendPayload.DraftID != nil && *frontendPayload.DraftID > 0 {
+		// Delete draft ONLY if status is 'complete' (submit)
+		// This ensures draft is kept if user just saves as draft, and deleted only when submitting
+		if frontendPayload.DraftID != nil && *frontendPayload.DraftID > 0 && frontendPayload.Status == "complete" {
 			_ = services.DeleteDraft(*frontendPayload.DraftID)
 		}
 
@@ -514,6 +515,32 @@ func UpdateEventHandler(c *gin.Context) {
 	if err := c.ShouldBindJSON(&updateData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Extract draftId and status from flat structure if present
+	var draftID *uint
+	var status string
+	if draftIdVal, ok := updateData["draftId"]; ok && draftIdVal != nil {
+		switch v := draftIdVal.(type) {
+		case float64:
+			id := uint(v)
+			draftID = &id
+		case string:
+			if parsed, err := strconv.ParseUint(v, 10, 64); err == nil {
+				id := uint(parsed)
+				draftID = &id
+			}
+		case uint:
+			draftID = &v
+		case int:
+			id := uint(v)
+			draftID = &id
+		}
+		// Remove draftId from updateData as it's not a field in event_details table
+		delete(updateData, "draftId")
+	}
+	if statusVal, ok := updateData["status"].(string); ok {
+		status = statusVal
 	}
 
 	// Parse date strings to time.Time if present
@@ -540,6 +567,12 @@ func UpdateEventHandler(c *gin.Context) {
 	if err := services.UpdateEvent(uint(eventID), updateData); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Delete draft ONLY if status is 'complete' (submit)
+	// This ensures draft is kept if user just saves as draft, and deleted only when submitting
+	if draftID != nil && *draftID > 0 && status == "complete" {
+		_ = services.DeleteDraft(*draftID)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Event updated successfully"})
