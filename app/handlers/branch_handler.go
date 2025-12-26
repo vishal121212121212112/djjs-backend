@@ -548,10 +548,15 @@ func UpdateBranchHandler(c *gin.Context) {
 		}
 	}
 
-	// Contact number: if empty string, remove it (don't update)
+	// Contact number: validate if provided
+	// Note: contact_number is required in the model, so if it's in the payload, it must be valid
 	if contactNumber, ok := payload["contact_number"]; ok {
-		if contactStr, ok := contactNumber.(string); ok && strings.TrimSpace(contactStr) == "" {
-			delete(payload, "contact_number") // Remove empty contact, don't update it
+		if contactStr, ok := contactNumber.(string); ok {
+			if strings.TrimSpace(contactStr) == "" {
+				// Contact number is required, don't allow empty
+				c.JSON(http.StatusBadRequest, gin.H{"error": "contact number is required and cannot be empty"})
+				return
+			}
 		}
 	}
 

@@ -16,6 +16,13 @@ func CreateChildBranch(childBranch *models.Branch) error {
 	}
 	
 	childBranch.CreatedOn = time.Now()
+	
+	// Ensure status is set to true when creating a child branch
+	// If status is not explicitly set, default to true
+	if !childBranch.Status {
+		childBranch.Status = true
+	}
+	
 	if err := config.DB.Create(childBranch).Error; err != nil {
 		return err
 	}

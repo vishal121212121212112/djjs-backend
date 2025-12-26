@@ -166,6 +166,10 @@ type EventDetails struct {
 	InitiationWomen  int `json:"initiation_women"`
 	InitiationChild  int `json:"initiation_child"`
 
+	// Branch association (nullable - optional field for backward compatibility)
+	BranchID *uint   `json:"branch_id,omitempty"`
+	Branch   *Branch `gorm:"foreignKey:BranchID" json:"branch,omitempty"`
+
 	Status string `gorm:"default:'incomplete';type:varchar(20)" json:"status,omitempty"`
 
 	CreatedOn time.Time  `json:"created_on,omitempty"`

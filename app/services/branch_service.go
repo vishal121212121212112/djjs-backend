@@ -83,6 +83,12 @@ func CreateBranch(branch *models.Branch) error {
 
 	branch.CreatedOn = time.Now()
 	branch.UpdatedOn = nil
+	
+	// Ensure status is set to true when creating a branch
+	// If status is not explicitly set, default to true
+	if !branch.Status {
+		branch.Status = true
+	}
 
 	if err := config.DB.Create(branch).Error; err != nil {
 		return err
@@ -90,7 +96,8 @@ func CreateBranch(branch *models.Branch) error {
 	return nil
 }
 
-// GetAllBranches fetches all branches
+// GetAllBranches fetches all parent branches only (branches with parent_branch_id IS NULL)
+// Child branches are stored in the same table but should only be shown when expanding parent branches
 func GetAllBranches() ([]models.Branch, error) {
 	var branches []models.Branch
 	if err := config.DB.
@@ -99,11 +106,12 @@ func GetAllBranches() ([]models.Branch, error) {
 			"address", "pincode", "post_office", "police_station", "open_days",
 			"daily_start_time", "daily_end_time", "status", "ncr", "region_id", "branch_code",
 			"created_on", "updated_on", "created_by", "updated_by").
+		Where("parent_branch_id IS NULL"). // Only return parent branches
 		Preload("Country").
 		Preload("State").
 		Preload("District").
 		Preload("City").
-		Preload("Children"). // Preload child branches
+		Preload("Children"). // Preload child branches for expand functionality
 		Order("id DESC"). // Order by ID descending to show newest first
 		Find(&branches).Error; err != nil {
 		return nil, err
@@ -155,15 +163,17 @@ func GetChildBranches(parentBranchID uint) ([]models.Branch, error) {
 	return branches, nil
 }
 
-// GetBranchSearch fetches branches by name and/or coordinator name
+// GetBranchSearch fetches parent branches by name and/or coordinator name
+// Only returns parent branches (parent_branch_id IS NULL) to match GetAllBranches behavior
 func GetBranchSearch(branchName, coordinator string) ([]models.Branch, error) {
 	var branches []models.Branch
 	db := config.DB.
 		Select("id", "name", "email", "coordinator_name", "contact_number", "established_on", "aashram_area",
-			"country_id", "state_id", "district_id", "city_id",
+			"country_id", "state_id", "district_id", "city_id", "parent_branch_id",
 			"address", "pincode", "post_office", "police_station", "open_days",
 			"daily_start_time", "daily_end_time", "status", "ncr", "region_id", "branch_code",
 			"created_on", "updated_on", "created_by", "updated_by").
+		Where("parent_branch_id IS NULL"). // Only search parent branches
 		Preload("Country").
 		Preload("State").
 		Preload("District").

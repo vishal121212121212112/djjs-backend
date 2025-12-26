@@ -85,10 +85,16 @@ func ValidateBranchUpdateFields(updateData map[string]interface{}) error {
 
 	if contactNumber, ok := updateData["contact_number"]; ok {
 		if contactStr, ok := contactNumber.(string); ok {
-			// ValidateContactNumber already handles empty strings, but be explicit
+			// Contact number is required - cannot be empty
+			if strings.TrimSpace(contactStr) == "" {
+				return errors.New("contact number is required and cannot be empty")
+			}
+			// Validate format
 			if err := ValidateContactNumber(contactStr); err != nil {
 				return err
 			}
+		} else {
+			return errors.New("contact_number must be a string")
 		}
 	}
 

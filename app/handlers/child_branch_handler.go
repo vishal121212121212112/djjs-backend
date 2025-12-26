@@ -45,6 +45,12 @@ func CreateChildBranchHandler(c *gin.Context) {
 	// This ensures coordinator is always the same for child branches
 	childBranch.CoordinatorName = parentBranch.CoordinatorName
 
+	// Ensure status is set to true when creating a child branch
+	// If not explicitly set, default to true
+	if !childBranch.Status {
+		childBranch.Status = true
+	}
+
 	if err := services.CreateChildBranch(&childBranch); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -27,7 +27,8 @@ func GetAllEvents(statusFilter string) ([]models.EventDetails, error) {
 
 	db := config.DB.
 		Preload("EventType").
-		Preload("EventCategory")
+		Preload("EventCategory").
+		Preload("Branch")
 
 	// Apply status filter if provided
 	if statusFilter != "" {
@@ -45,7 +46,7 @@ func GetAllEvents(statusFilter string) ([]models.EventDetails, error) {
 func SearchEvents(search string) ([]models.EventDetails, error) {
 	var events []models.EventDetails
 
-	db := config.DB.Preload("EventType").Preload("EventCategory")
+	db := config.DB.Preload("EventType").Preload("EventCategory").Preload("Branch")
 
 	if search != "" {
 		db = db.Where(`
@@ -150,6 +151,7 @@ func GetEventByID(eventID uint) (*models.EventDetails, error) {
 	if err := config.DB.
 		Preload("EventType").
 		Preload("EventCategory").
+		Preload("Branch").
 		First(&event, eventID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrEventNotFound

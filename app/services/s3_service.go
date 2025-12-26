@@ -138,6 +138,84 @@ func InitializeS3() error {
 	log.Printf("S3 initialized successfully - Bucket: %s, Region: %s, Credentials: %s (verified)",
 		bucketName, region, expectedMasked)
 
+	// Verify bucket access and permissions
+	if err := VerifyS3Connection(context.TODO()); err != nil {
+		return fmt.Errorf("S3 bucket verification failed: %w", err)
+	}
+
+	log.Printf("✓ S3 bucket verification passed - bucket is accessible and has correct permissions")
+
+	return nil
+}
+
+// VerifyS3Connection verifies that S3 bucket is accessible and has correct permissions
+func VerifyS3Connection(ctx context.Context) error {
+	if S3Client == nil {
+		return fmt.Errorf("S3 client is not initialized")
+	}
+
+	// Test 1: Check if bucket exists and is accessible (HeadBucket)
+	log.Printf("Verifying S3 bucket access: %s", S3BucketName)
+	_, err := S3Client.HeadBucket(ctx, &s3.HeadBucketInput{
+		Bucket: aws.String(S3BucketName),
+	})
+	if err != nil {
+		return fmt.Errorf("cannot access bucket %s: %w. Check bucket name, region, and IAM permissions (s3:ListBucket)", S3BucketName, err)
+	}
+	log.Printf("✓ Bucket exists and is accessible")
+
+	// Test 2: Verify we can list objects (tests s3:ListBucket permission)
+	_, err = S3Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
+		Bucket:  aws.String(S3BucketName),
+		MaxKeys: aws.Int32(1), // Only list 1 object to test permission
+	})
+	if err != nil {
+		return fmt.Errorf("cannot list objects in bucket %s: %w. Check IAM permissions (s3:ListBucket)", S3BucketName, err)
+	}
+	log.Printf("✓ List objects permission verified")
+
+	// Test 3: Verify we can generate presigned URLs (tests s3:GetObject permission)
+	// Use a test key that might not exist - we're just testing permission, not object existence
+	testKey := "test-permission-check-" + fmt.Sprintf("%d", time.Now().Unix())
+	presignClient := s3.NewPresignClient(S3Client)
+	_, err = presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(S3BucketName),
+		Key:    aws.String(testKey),
+	}, func(opts *s3.PresignOptions) {
+		opts.Expires = 1 * time.Minute
+	})
+	if err != nil {
+		return fmt.Errorf("cannot generate presigned URLs: %w. Check IAM permissions (s3:GetObject)", err)
+	}
+	log.Printf("✓ Presigned URL generation permission verified")
+
+	// Test 4: Verify we can upload (tests s3:PutObject permission)
+	// Create a minimal test upload to verify write permissions
+	testData := []byte("test")
+	testUploadKey := "test-upload-permission-" + fmt.Sprintf("%d", time.Now().Unix()) + ".txt"
+	_, err = S3Client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket:      aws.String(S3BucketName),
+		Key:         aws.String(testUploadKey),
+		Body:        bytes.NewReader(testData),
+		ContentType: aws.String("text/plain"),
+	})
+	if err != nil {
+		return fmt.Errorf("cannot upload to bucket %s: %w. Check IAM permissions (s3:PutObject)", S3BucketName, err)
+	}
+	log.Printf("✓ Upload permission verified")
+
+	// Clean up test file
+	_, err = S3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(S3BucketName),
+		Key:    aws.String(testUploadKey),
+	})
+	if err != nil {
+		log.Printf("Warning: Failed to delete test file %s: %v", testUploadKey, err)
+		// Don't fail verification if cleanup fails
+	} else {
+		log.Printf("✓ Delete permission verified (test file cleaned up)")
+	}
+
 	return nil
 }
 

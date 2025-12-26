@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -203,47 +204,58 @@ func DeleteEventMedia(id uint) error {
 // ConvertEventMediaToPresignedURLs converts EventMedia items to include presigned URLs
 // This function takes a slice of EventMedia and returns a new slice with presigned URLs
 // All media access uses short-lived pre-signed URLs for security
-// REQUIRES: media.S3Key must be set - will fail if S3Key is empty
+// Items with empty S3Key are skipped with a warning (instead of failing the entire request)
 func ConvertEventMediaToPresignedURLs(ctx context.Context, mediaList []models.EventMedia) ([]models.EventMedia, error) {
-	result := make([]models.EventMedia, len(mediaList))
+	result := make([]models.EventMedia, 0, len(mediaList))
 	
-	for i, media := range mediaList {
-		result[i] = media
-		
-		// ENFORCE S3Key-only access - DO NOT fall back to FileURL
+	for _, media := range mediaList {
+		// Skip items with empty S3Key - log warning but don't fail the entire request
 		if media.S3Key == "" {
-			// Return error if S3Key is missing - fail fast
-			return nil, fmt.Errorf("media item ID %d has empty S3Key - cannot generate presigned URL. Run backfill migration to populate s3_key from file_url", media.ID)
+			log.Printf("WARNING: Skipping media item ID %d (event_id: %d) - empty S3Key. Run backfill migration to populate s3_key from file_url", media.ID, media.EventID)
+			continue
 		}
 		
+		mediaCopy := media
+		
 		// Generate short-lived presigned URL (15 minutes for gallery listing)
-		presignedURL, err := GetPresignedURL(ctx, media.S3Key, 15*time.Minute)
+		presignedURL, err := GetPresignedURL(ctx, mediaCopy.S3Key, 15*time.Minute)
 		if err != nil {
-			// Fail fast on presign errors - return HTTP 500
-			return nil, fmt.Errorf("failed to generate presigned URL for media ID %d (s3_key: %s): %w", media.ID, media.S3Key, err)
+			// Log error but skip this item instead of failing entire request
+			log.Printf("ERROR: Failed to generate presigned URL for media ID %d (s3_key: %s): %v", mediaCopy.ID, mediaCopy.S3Key, err)
+			continue
 		}
 		
 		// Defensive check: ensure URL is presigned (contains X-Amz-Signature)
 		if !strings.Contains(presignedURL, "X-Amz-Signature") && !strings.Contains(presignedURL, "Signature=") {
-			return nil, fmt.Errorf("CRITICAL: generated URL for media ID %d does not contain presigned signature: %s", media.ID, presignedURL)
+			log.Printf("ERROR: Generated URL for media ID %d does not contain presigned signature: %s", mediaCopy.ID, presignedURL)
+			continue
+		}
+		
+		// Validate URL length (presigned URLs can be long - typically 500-1000 chars)
+		if len(presignedURL) < 100 {
+			log.Printf("ERROR: Generated URL for media ID %d appears truncated (length: %d): %s", mediaCopy.ID, len(presignedURL), presignedURL)
+			continue
 		}
 		
 		// Store presigned URL in URL field (for JSON serialization)
 		// FileURL is internal and not serialized
-		result[i].FileURL = presignedURL // Internal storage
-		result[i].URL = presignedURL     // JSON response field
+		mediaCopy.FileURL = presignedURL // Internal storage
+		mediaCopy.URL = presignedURL     // JSON response field
 		
 		// Generate thumbnail presigned URL if thumbnail exists
-		if media.ThumbnailS3Key != nil && *media.ThumbnailS3Key != "" {
-			thumbnailURL, err := GetPresignedURL(ctx, *media.ThumbnailS3Key, 15*time.Minute)
+		if mediaCopy.ThumbnailS3Key != nil && *mediaCopy.ThumbnailS3Key != "" {
+			thumbnailURL, err := GetPresignedURL(ctx, *mediaCopy.ThumbnailS3Key, 15*time.Minute)
 			if err != nil {
-				// Fail fast on thumbnail presign errors
-				return nil, fmt.Errorf("failed to generate presigned URL for thumbnail of media ID %d (thumbnail_s3_key: %s): %w", media.ID, *media.ThumbnailS3Key, err)
+				// Log error but don't fail - thumbnail is optional
+				log.Printf("WARNING: Failed to generate presigned URL for thumbnail of media ID %d (thumbnail_s3_key: %s): %v", mediaCopy.ID, *mediaCopy.ThumbnailS3Key, err)
+			} else {
+				// Store thumbnail URL in FileURL field temporarily (frontend can use this)
+				// Note: In future, consider adding separate thumbnail_url field to response DTO
+				_ = thumbnailURL // Placeholder for future thumbnail URL handling
 			}
-			// Store thumbnail URL in FileURL field temporarily (frontend can use this)
-			// Note: In future, consider adding separate thumbnail_url field to response DTO
-			_ = thumbnailURL // Placeholder for future thumbnail URL handling
 		}
+		
+		result = append(result, mediaCopy)
 	}
 	
 	return result, nil

@@ -225,6 +225,16 @@ func MapFrontendPayloadToEvent(generalDetails map[string]interface{}, involvedPa
 		}
 	}
 
+	// Map branch_id (optional field)
+	if branchId, ok := generalDetails["branchId"].(float64); ok && branchId > 0 {
+		branchIDUint := uint(branchId)
+		event.BranchID = &branchIDUint
+	} else if branchId, ok := generalDetails["branch_id"].(float64); ok && branchId > 0 {
+		// Also handle snake_case for backward compatibility
+		branchIDUint := uint(branchId)
+		event.BranchID = &branchIDUint
+	}
+
 	// Map involved participants
 	if involvedParticipants != nil {
 		if val, ok := involvedParticipants["beneficiariesMen"].(float64); ok {

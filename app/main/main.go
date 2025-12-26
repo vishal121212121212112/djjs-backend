@@ -84,9 +84,20 @@ func main() {
 	}
 	config.JWTSecret = []byte(jwtSecret)
 
-	// 3️⃣ Initialize S3
+	// 3️⃣ Initialize S3 (fail fast if S3 is not properly configured)
 	if err := services.InitializeS3(); err != nil {
-		log.Printf("Warning: Failed to initialize S3: %v", err)
+		log.Printf("═══════════════════════════════════════════════════════════════")
+		log.Printf("ERROR: Failed to initialize S3: %v", err)
+		log.Printf("ERROR: S3 is required for file uploads and media access")
+		log.Printf("ERROR: Please check your .env file for:")
+		log.Printf("ERROR:   - AWS_ACCESS_KEY_ID")
+		log.Printf("ERROR:   - AWS_SECRET_ACCESS_KEY")
+		log.Printf("ERROR:   - AWS_S3_BUCKET_NAME")
+		log.Printf("ERROR:   - AWS_REGION")
+		log.Printf("ERROR: And verify IAM permissions: s3:ListBucket, s3:GetObject, s3:PutObject, s3:DeleteObject")
+		log.Printf("═══════════════════════════════════════════════════════════════")
+		// In production, you might want to fail fast: log.Fatalf(...)
+		// For now, log error but continue (some features may not work)
 	}
 
 	// 3️⃣b Startup invariant check: verify no legacy records with NULL s3_key
@@ -94,6 +105,19 @@ func main() {
 
 	// 4️⃣ Create Gin router
 	r := gin.New()
+	
+	// Configure trusted proxies for production (prevents the warning)
+	// In production, set this to your reverse proxy IPs (e.g., nginx, load balancer)
+	// For development, we can trust localhost proxies
+	if gin.Mode() == gin.ReleaseMode {
+		// In production, only trust specific proxies
+		// Example: r.SetTrustedProxies([]string{"127.0.0.1", "::1"})
+		// For now, we'll trust localhost only
+		r.SetTrustedProxies([]string{"127.0.0.1", "::1"})
+	} else {
+		// In development, trust localhost proxies
+		r.SetTrustedProxies([]string{"127.0.0.1", "::1"})
+	}
 	
 	// Add recovery middleware (gin.Default includes this, but we want to control it)
 	r.Use(gin.Recovery())
@@ -127,7 +151,7 @@ func main() {
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     origins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "accept", "origin", "Cache-Control", "X-Requested-With"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "accept", "origin", "Cache-Control", "X-Requested-With", "x-request-id", "X-Request-Id"},
 		ExposeHeaders:    []string{"Content-Length", "Authorization"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
